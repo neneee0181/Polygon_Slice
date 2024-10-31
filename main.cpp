@@ -23,6 +23,20 @@ vector<vector<GLuint>> vbos;
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 200.0);
 glm::vec3 cameraDirection = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
+glm::mat4 projection = glm::mat4(1.0f);
+glm::mat4 view = glm::mat4(1.0f);
+
+void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+    glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
+
+    // OpenGL 좌표계를 맞추기 위해 y를 뒤집음
+    glm::vec3 winCoords = glm::vec3(mouseX, screenHeight - mouseY, 0.0f); // Near plane (0.0 -> near, 1.0 -> far)
+
+    // Unproject
+    glm::vec3 worldPos = glm::unProject(winCoords, view * model, projection, viewport);
+
+    std::cout << "3D Position: (" << worldPos.x << ", " << worldPos.y << ", " << worldPos.z << ")" << std::endl;
+}
 
 GLvoid Reshape(int w, int h) {
     glViewport(0, 0, w, h);
@@ -64,7 +78,9 @@ void keySpecial(int key, int x, int y) {
 }
 
 void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+    }
         std::cout << "x = " << x << " y = " << y << std::endl;
     glutPostRedisplay();
 }
@@ -117,7 +133,7 @@ GLvoid drawScene() {
 
     glUseProgram(shaderProgramID);
 
-    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::mat4(1.0f);
     view = glm::lookAt(
         cameraPos,
         cameraDirection,
@@ -126,7 +142,7 @@ GLvoid drawScene() {
     unsigned int viewLocation = glGetUniformLocation(shaderProgramID, "viewTransform");
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
-    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::mat4(1.0f);
     projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 300.0f);
     unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projectionTransform");
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
