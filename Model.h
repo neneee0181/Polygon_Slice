@@ -48,6 +48,7 @@ struct Model {
     std::vector<glm::vec3> colors;      // **각 정점에 대한 색상 배열**
 
     std::string name;
+    int r_r = 0; // 회전 상태값
     std::vector<glm::vec3> lines;
     int lr = 0;
 

@@ -160,18 +160,21 @@ void startTimer(int value) {
         case 0:
             model = model_box;
             model.lr = lr;
+            model.r_r = dis_model(gen);
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
             model.modelMatrix = matrix * model.modelMatrix;
             break;
         case 1:
             model = model_sphere;
             model.lr = lr;
+            model.r_r = dis_model(gen);
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
             model.modelMatrix = matrix * model.modelMatrix;
             break;
         case 2:
             model = model_cylinder;
             model.lr = lr;
+            model.r_r = dis_model(gen);
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
             model.modelMatrix = matrix * model.modelMatrix;
             break;
@@ -185,6 +188,16 @@ void startTimer(int value) {
         models.push_back(model);
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
+
+    // 자전
+    for (int i = 0; i < models.size(); ++i) {
+        glm::mat4 matrix = glm::mat4(1.0f);
+        matrix = glm::translate(matrix, glm::vec3(models[i].modelMatrix[3]));
+        matrix = glm::rotate(matrix, glm::radians(0.5f), glm::vec3(models[i].r_r == 0 ? 1.0 : 0.0, models[i].r_r == 1 ? 1.0 : 0.0, models[i].r_r == 2 ? 1.0 : 0.0));
+        matrix = glm::translate(matrix, glm::vec3(-models[i].modelMatrix[3]));
+        models[i].modelMatrix = matrix * models[i].modelMatrix;
+    }
+
     glutPostRedisplay();
     glutTimerFunc(16, startTimer, ++value);
 }
@@ -198,7 +211,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(width, height);
-    glutCreateWindow("template");
+    glutCreateWindow("Polygon Slice");
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
