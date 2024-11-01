@@ -7,6 +7,7 @@
 #include <gl/glm/glm/gtc/type_ptr.hpp>
 #include <vector> 
 #include <unordered_map>
+#include <random>
 
 #include "LoadObj.h"
 #include "shaderMaker.h"
@@ -16,6 +17,8 @@ using namespace std;
 void InitBuffer();
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
+void startTimer(int value);
+void AddModelBuffer(const Model& model);
 
 vector<Model> models;
 vector<GLuint> vaos;
@@ -61,11 +64,6 @@ GLvoid Reshape(int w, int h) {
     height = h;
 }
 
-void timer(int value) {
-    glutPostRedisplay();
-    glutTimerFunc(16, timer, 0);
-}
-
 void keyUp(unsigned char key, int x, int y) {
     keyUp_s(key);
 }
@@ -79,6 +77,10 @@ void keyDown(unsigned char key, int x, int y) {
     case 'q':
         cout << " 프로그램 종료 " << endl;
         exit(0);
+        break;
+    case 's':
+        cout << "-------- START --------" << endl;
+        glutTimerFunc(0, startTimer, 0);
         break;
     default:
         break;
@@ -116,6 +118,38 @@ void mouse(int button, int state, int x, int y) {
     }
         std::cout << "x = " << x << " y = " << y << std::endl;
     glutPostRedisplay();
+} 
+
+random_device rd;
+mt19937 gen(rd());
+uniform_int_distribution<> dis_model(0, 2);
+uniform_int_distribution<> dis_rl(0, 1);
+
+void startTimer(int value) {
+    
+    cout << value << endl;
+    
+    if (value % 120 == 0) {
+        Model model;
+        switch (dis_model(gen))
+        {
+        case 0:
+            model = model_box;
+            break;
+        case 1:
+            model = model_sphere;
+            break;
+        case 2:
+            model = model_cylinder;
+            break;
+        default:
+            break;
+        }
+        models.push_back(model);
+        AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
+    }
+
+    glutTimerFunc(16, startTimer, ++value);
 }
 
 int main(int argc, char** argv) {
@@ -140,31 +174,28 @@ int main(int argc, char** argv) {
     cout << "명령어 리스트" << endl;
     cout << "1 : LINE" << endl;
     cout << "2 : FILL" << endl;
+    cout << "s : start" << endl;
 
     make_shaderProgram();
 
 
     read_obj_file("obj/box.obj", model_box, "box");
-    model_box.initialRotation = glm::mat4(1.0f);
-    model_box.modelMatrix = model_box.initialRotation;
-    model_box.modelMatrix = glm::translate(model_box.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_box.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
     model_box.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    model_box.modelMatrix = model_box.translateMatrix * model_box.rotateMatrix *model_box.modelMatrix;
     models.push_back(model_box);
 
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
-    model_sphere.initialRotation = glm::mat4(1.0f);
-    model_sphere.modelMatrix = model_sphere.initialRotation;
-    model_sphere.modelMatrix = glm::translate(model_sphere.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
     model_sphere.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    model_sphere.modelMatrix = model_sphere.translateMatrix * model_sphere.rotateMatrix * model_sphere.modelMatrix;
     models.push_back(model_sphere);
 
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-    model_cylinder.initialRotation = glm::mat4(1.0f);
-    model_cylinder.modelMatrix = model_cylinder.initialRotation;
-    model_cylinder.modelMatrix = glm::translate(model_cylinder.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
     model_cylinder.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    model_cylinder.modelMatrix = model_cylinder.translateMatrix * model_cylinder.rotateMatrix * model_cylinder.modelMatrix;
     models.push_back(model_cylinder);
-
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
@@ -314,4 +345,53 @@ void InitBuffer() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     }
+}
+
+
+void AddModelBuffer(const Model& model) {
+    GLuint vao;
+    vector<GLuint> vbo(4);
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // VBO 생성
+    glGenBuffers(4, vbo.data());
+
+    // 정점 버퍼 설정
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(glm::vec3), model.vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);  // location 0에 정점 할당
+    glEnableVertexAttribArray(0);
+
+    // 법선 버퍼 설정
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+    glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(glm::vec3), model.normals.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);  // location 1에 법선 할당
+    glEnableVertexAttribArray(1);
+
+    // 텍스처 좌표 버퍼 설정
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
+    glBufferData(GL_ARRAY_BUFFER, model.texCoords.size() * sizeof(glm::vec2), model.texCoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);  // location 2에 텍스처 좌표 할당
+    glEnableVertexAttribArray(2);
+
+    // 면 인덱스 데이터 (EBO) 설정
+    vector<unsigned int> indices;
+    for (const Face& face : model.faces) {
+        indices.push_back(face.v1);
+        indices.push_back(face.v2);
+        indices.push_back(face.v3);
+    }
+
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+    // 설정이 끝난 VAO와 VBO를 저장
+    vaos.push_back(vao);
+    vbos.push_back(vbo);
+
+    glBindVertexArray(0); // VAO unbind
 }
