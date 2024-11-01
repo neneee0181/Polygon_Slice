@@ -258,13 +258,13 @@ GLvoid drawScene() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
     projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 500.0f);
+    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 600.0f);
     unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projectionTransform");
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     GLint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
     GLint lightColorLoc = glGetUniformLocation(shaderProgramID, "lightColor");
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-glm::vec3(0.0, 0.0, 700.0)));
+    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-glm::vec3(0.0, 600.0, 900.0)));
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(glm::vec3(1.0f, 0.95f, 0.9f)));
 
     glEnable(GL_DEPTH_TEST);

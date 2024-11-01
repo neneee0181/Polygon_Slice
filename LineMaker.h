@@ -29,11 +29,11 @@ void make_line_left(glm::vec3 startPoint, std::vector<glm::vec3>& lines) {
         position += velocity * timeStep;
 
         // y축에 중력 적용
-        velocity.y += gravity * timeStep;
+        velocity.y += -5 * timeStep;
 
         // z축이 0에 도달하면 멈추기
-        if (position.z > 0.0f) {
-            position.z = 0.0f;
+        if (position.z > 100.0f) {
+            position.z = 100.0f;
             velocity.z = 0.0f;
         }
 
@@ -41,6 +41,6 @@ void make_line_left(glm::vec3 startPoint, std::vector<glm::vec3>& lines) {
         lines.push_back(position);
 
         // z축이 0에 도달했으면 종료
-        if (position.z == 0.0f) break;
+        if (position.z == 100.0f) break;
     }
 }
