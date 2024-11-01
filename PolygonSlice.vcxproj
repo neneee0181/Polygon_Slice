@@ -133,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="filetobuf.h" />
+    <ClInclude Include="LineMaker.h" />
     <ClInclude Include="LoadMtl.h" />
     <ClInclude Include="LoadObj.h" />
     <ClInclude Include="LoadTexture.h" />

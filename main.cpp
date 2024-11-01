@@ -11,6 +11,7 @@
 
 #include "LoadObj.h"
 #include "shaderMaker.h"
+#include "LineMaker.h"
 
 using namespace std; 
 
@@ -19,10 +20,13 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 void startTimer(int value);
 void AddModelBuffer(const Model& model);
+void InitLineBuffer();
 
 vector<Model> models;
 vector<GLuint> vaos;
 vector<vector<GLuint>> vbos;
+std::vector<GLuint> lineVAOs;
+std::vector<GLuint> lineVBOs;
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 200.0);
 glm::vec3 cameraDirection = glm::vec3(0.0, 0.0, 0.0);
@@ -34,6 +38,8 @@ glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
 glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
 
 Model model_box, model_sphere, model_cylinder;
+
+vector<vector<glm::vec3>> lines;
 
 std::unordered_map<char, bool> keyState;
 
@@ -208,25 +214,10 @@ int main(int argc, char** argv) {
     make_shaderProgram();
 
     read_obj_file("obj/box.obj", model_box, "box");
-    /*model_box.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
-    model_box.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
-    model_box.modelMatrix = model_box.translateMatrix * model_box.rotateMatrix *model_box.modelMatrix;
-    model_box.lr = 1;
-    models.push_back(model_box);*/
-
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
-    /*model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), p_r);
-    model_sphere.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
-    model_sphere.modelMatrix = model_sphere.translateMatrix * model_sphere.rotateMatrix * model_sphere.modelMatrix;
-    model_sphere.lr = 2;
-    models.push_back(model_sphere);*/
-
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-    /*model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
-    model_cylinder.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
-    model_cylinder.modelMatrix = model_cylinder.translateMatrix * model_cylinder.rotateMatrix * model_cylinder.modelMatrix;
-    model_sphere.lr = 2;
-    models.push_back(model_cylinder);*/
+
+    make_line_left(p_l, lines);
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
@@ -239,6 +230,7 @@ int main(int argc, char** argv) {
     }
 
     InitBuffer();
+    InitLineBuffer();
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
@@ -283,7 +275,7 @@ GLvoid drawScene() {
 
     for (size_t i = 0; i < models.size(); ++i) {
         glBindVertexArray(vaos[i]);
-
+        glLineWidth(1.0f);
         if (models[i].material.hasTexture) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, models[i].material.textureID);
@@ -309,7 +301,7 @@ GLvoid drawScene() {
             glUniform1i(modelStatus, 0);
             if (isKeyPressed_s('1'))
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            else if (isKeyPressed_s('2'))
+            else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDrawElements(GL_TRIANGLES, models[i].faces.size() * 3, GL_UNSIGNED_INT, 0);
         }
@@ -317,10 +309,17 @@ GLvoid drawScene() {
         glBindVertexArray(0);
     }
 
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        glBindVertexArray(lineVAOs[i]);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+        glLineWidth(1.5f);
+        glDrawArrays(GL_LINE_STRIP, 0, lines[i].size());
+        glBindVertexArray(0);
+    }
+
     glDisable(GL_DEPTH_TEST);
-
     glutSwapBuffers();
-
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         cout << "OpenGL error: " << err << endl;
@@ -378,7 +377,6 @@ void InitBuffer() {
     }
 }
 
-
 void AddModelBuffer(const Model& model) {
     GLuint vao;
     vector<GLuint> vbo(4);
@@ -425,4 +423,31 @@ void AddModelBuffer(const Model& model) {
     vbos.push_back(vbo);
 
     glBindVertexArray(0); // VAO unbind
+}
+
+void InitLineBuffer() {
+    // Resize VAO and VBO containers to match the number of lines
+    lineVAOs.resize(lines.size());
+    lineVBOs.resize(lines.size());
+
+    // Generate VAOs and VBOs for each line path
+    glGenVertexArrays(lineVAOs.size(), lineVAOs.data());
+    glGenBuffers(lineVBOs.size(), lineVBOs.data());
+
+    // Loop over each line in the `lines` vector
+    for (size_t i = 0; i < lines.size(); ++i) {
+        glBindVertexArray(lineVAOs[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, lineVBOs[i]);
+
+        // Upload line data to the buffer
+        glBufferData(GL_ARRAY_BUFFER, lines[i].size() * sizeof(glm::vec3), lines[i].data(), GL_STATIC_DRAW);
+
+        // Set up vertex attribute
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        // Unbind VAO and VBO
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 }
