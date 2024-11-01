@@ -49,5 +49,7 @@ struct Model {
 
     std::string name;
 
+    int lr = 0;
+
     GLuint textureID;  // 텍스처 ID 필드 추가
 };

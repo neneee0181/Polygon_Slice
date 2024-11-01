@@ -30,6 +30,9 @@ glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
 glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 
+glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
+glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
+
 Model model_box, model_sphere, model_cylinder;
 
 std::unordered_map<char, bool> keyState;
@@ -178,23 +181,25 @@ int main(int argc, char** argv) {
 
     make_shaderProgram();
 
-
     read_obj_file("obj/box.obj", model_box, "box");
-    model_box.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
+    model_box.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
     model_box.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_box.modelMatrix = model_box.translateMatrix * model_box.rotateMatrix *model_box.modelMatrix;
+    model_box.lr = 1;
     models.push_back(model_box);
 
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
-    model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
+    model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), p_r);
     model_sphere.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_sphere.modelMatrix = model_sphere.translateMatrix * model_sphere.rotateMatrix * model_sphere.modelMatrix;
+    model_sphere.lr = 2;
     models.push_back(model_sphere);
 
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-    model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
+    model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
     model_cylinder.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_cylinder.modelMatrix = model_cylinder.translateMatrix * model_cylinder.rotateMatrix * model_cylinder.modelMatrix;
+    model_sphere.lr = 2;
     models.push_back(model_cylinder);
 
     for (auto& model : models) {
@@ -236,13 +241,13 @@ GLvoid drawScene() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
     projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 300.0f);
+    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 500.0f);
     unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projectionTransform");
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     GLint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
     GLint lightColorLoc = glGetUniformLocation(shaderProgramID, "lightColor");
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-cameraPos));
+    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-glm::vec3(0.0, 0.0, 700.0)));
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(glm::vec3(1.0f, 0.95f, 0.9f)));
 
     glEnable(GL_DEPTH_TEST);
