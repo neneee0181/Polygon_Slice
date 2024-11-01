@@ -178,6 +178,10 @@ void startTimer(int value) {
         default:
             break;
         }
+
+        make_line_left(model.lr == 1 ? p_l : p_r, model.lines);
+        InitLineBuffer(model);
+
         models.push_back(model);
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
@@ -214,13 +218,6 @@ int main(int argc, char** argv) {
     read_obj_file("obj/box.obj", model_box, "box");
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-
-    make_line_left(p_l, model_box.lines);
-    make_line_left(p_l, model_sphere.lines);
-    make_line_left(p_l, model_cylinder.lines);
-    InitLineBuffer(model_box);
-    InitLineBuffer(model_sphere);
-    InitLineBuffer(model_cylinder);
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
