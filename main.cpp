@@ -91,13 +91,13 @@ void keyDown(unsigned char key, int x, int y) {
         if (model_speed <= 60)
             break;
         --model_speed;
-        cout << "게임 스피드 = " + to_string(model_speed) << endl;
+        cout << "폴리곤 생성 시간 ms = " + to_string(model_speed) << endl;
         break;
     case '-':
         if (model_speed >= 300)
             break;
         ++model_speed;
-        cout << "게임 스피드 = " + to_string(model_speed) << endl;
+        cout << "폴리곤 생성 시간 ms = " + to_string(model_speed) << endl;
         
         break;
     default:
