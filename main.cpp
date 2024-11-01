@@ -6,6 +6,7 @@
 #include <gl/glm/glm/gtc/matrix_transform.hpp>
 #include <gl/glm/glm/gtc/type_ptr.hpp>
 #include <vector> 
+#include <unordered_map>
 
 #include "LoadObj.h"
 #include "shaderMaker.h"
@@ -27,6 +28,20 @@ glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 
 Model model_box, model_sphere, model_cylinder;
+
+std::unordered_map<char, bool> keyState;
+
+void keyDown_s(const char& key) {
+    keyState[key] = true;
+}
+
+void keyUp_s(const char& key) {
+    keyState[key] = false;
+}
+
+bool isKeyPressed_s(const char& key) {
+    return keyState[key];
+}
 
 void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
     glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
@@ -51,7 +66,23 @@ void timer(int value) {
     glutTimerFunc(16, timer, 0);
 }
 
-void keyBoard(unsigned char key, int x, int y) {
+void keyUp(unsigned char key, int x, int y) {
+    keyUp_s(key);
+}
+
+void keyDown(unsigned char key, int x, int y) {
+
+    keyDown_s(key);
+
+    switch (key)
+    {
+    case 'q':
+        cout << " 프로그램 종료 " << endl;
+        exit(0);
+        break;
+    default:
+        break;
+    }
     glutPostRedisplay();
 }
 
@@ -106,6 +137,10 @@ int main(int argc, char** argv) {
     else
         cout << "GLEW Initialized\n";
 
+    cout << "명령어 리스트" << endl;
+    cout << "1 : LINE" << endl;
+    cout << "2 : FILL" << endl;
+
     make_shaderProgram();
 
 
@@ -145,7 +180,8 @@ int main(int argc, char** argv) {
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
-    glutKeyboardFunc(keyBoard);
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
     glutSpecialFunc(keySpecial);
     glutMouseFunc(mouse);
     glutMainLoop();
@@ -208,9 +244,11 @@ GLvoid drawScene() {
 
         if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
-
             glUniform1i(modelStatus, 0);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            if (isKeyPressed_s('1'))
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            else if (isKeyPressed_s('2'))
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDrawElements(GL_TRIANGLES, models[i].faces.size() * 3, GL_UNSIGNED_INT, 0);
         }
 
