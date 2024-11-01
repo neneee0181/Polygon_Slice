@@ -26,6 +26,8 @@ glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
 glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 
+Model model_box, model_sphere, model_cylinder;
+
 void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
     glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
 
@@ -106,14 +108,27 @@ int main(int argc, char** argv) {
 
     make_shaderProgram();
 
-    Model modelBoard;
 
-    read_obj_file("obj/Cylinder.obj", modelBoard, "box");
-    modelBoard.initialRotation = glm::mat4(1.0f);
-    modelBoard.modelMatrix = modelBoard.initialRotation;
-    modelBoard.modelMatrix = glm::translate(modelBoard.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
-    modelBoard.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
-    models.push_back(modelBoard);
+    read_obj_file("obj/box.obj", model_box, "box");
+    model_box.initialRotation = glm::mat4(1.0f);
+    model_box.modelMatrix = model_box.initialRotation;
+    model_box.modelMatrix = glm::translate(model_box.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_box.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    models.push_back(model_box);
+
+    read_obj_file("obj/sphere.obj", model_sphere, "sphere");
+    model_sphere.initialRotation = glm::mat4(1.0f);
+    model_sphere.modelMatrix = model_sphere.initialRotation;
+    model_sphere.modelMatrix = glm::translate(model_sphere.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_sphere.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    models.push_back(model_sphere);
+
+    read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
+    model_cylinder.initialRotation = glm::mat4(1.0f);
+    model_cylinder.modelMatrix = model_cylinder.initialRotation;
+    model_cylinder.modelMatrix = glm::translate(model_cylinder.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    model_cylinder.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
+    models.push_back(model_cylinder);
 
 
     for (auto& model : models) {
@@ -191,7 +206,7 @@ GLvoid drawScene() {
             glUniform1f(NsLoc, models[i].material.Ns);
         }
 
-        if (models[i].name == "box") {
+        if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
 
             glUniform1i(modelStatus, 0);
