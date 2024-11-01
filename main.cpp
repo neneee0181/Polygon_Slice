@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
     Model modelBoard;
 
-    read_obj_file("obj/box.obj", modelBoard, "box");
+    read_obj_file("obj/Cylinder.obj", modelBoard, "box");
     modelBoard.initialRotation = glm::mat4(1.0f);
     modelBoard.modelMatrix = modelBoard.initialRotation;
     modelBoard.modelMatrix = glm::translate(modelBoard.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
@@ -195,7 +195,7 @@ GLvoid drawScene() {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
 
             glUniform1i(modelStatus, 0);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, models[i].faces.size() * 3, GL_UNSIGNED_INT, 0);
         }
 
