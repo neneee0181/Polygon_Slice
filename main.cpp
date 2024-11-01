@@ -37,6 +37,8 @@ Model model_box, model_sphere, model_cylinder;
 
 std::unordered_map<char, bool> keyState;
 
+int model_speed = 120;
+
 void keyDown_s(const char& key) {
     keyState[key] = true;
 }
@@ -85,6 +87,19 @@ void keyDown(unsigned char key, int x, int y) {
         cout << "-------- START --------" << endl;
         glutTimerFunc(0, startTimer, 0);
         break;
+    case '+':
+        if (model_speed <= 60)
+            break;
+        --model_speed;
+        cout << "게임 스피드 = " + to_string(model_speed) << endl;
+        break;
+    case '-':
+        if (model_speed >= 300)
+            break;
+        ++model_speed;
+        cout << "게임 스피드 = " + to_string(model_speed) << endl;
+        
+        break;
     default:
         break;
     }
@@ -132,18 +147,29 @@ void startTimer(int value) {
     
     cout << value << endl;
     
-    if (value % 120 == 0) {
+    if (value % model_speed == 0) {
+        int lr = dis_rl(gen);
         Model model;
+        glm::mat4 matrix = glm::mat4(1.0f);
         switch (dis_model(gen))
         {
         case 0:
             model = model_box;
+            model.lr = lr;
+            matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
+            model.modelMatrix = matrix * model.modelMatrix;
             break;
         case 1:
             model = model_sphere;
+            model.lr = lr;
+            matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
+            model.modelMatrix = matrix * model.modelMatrix;
             break;
         case 2:
             model = model_cylinder;
+            model.lr = lr;
+            matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
+            model.modelMatrix = matrix * model.modelMatrix;
             break;
         default:
             break;
@@ -151,7 +177,7 @@ void startTimer(int value) {
         models.push_back(model);
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
-
+    glutPostRedisplay();
     glutTimerFunc(16, startTimer, ++value);
 }
 
@@ -182,25 +208,25 @@ int main(int argc, char** argv) {
     make_shaderProgram();
 
     read_obj_file("obj/box.obj", model_box, "box");
-    model_box.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
+    /*model_box.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
     model_box.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_box.modelMatrix = model_box.translateMatrix * model_box.rotateMatrix *model_box.modelMatrix;
     model_box.lr = 1;
-    models.push_back(model_box);
+    models.push_back(model_box);*/
 
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
-    model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), p_r);
+    /*model_sphere.translateMatrix = glm::translate(glm::mat4(1.0f), p_r);
     model_sphere.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_sphere.modelMatrix = model_sphere.translateMatrix * model_sphere.rotateMatrix * model_sphere.modelMatrix;
     model_sphere.lr = 2;
-    models.push_back(model_sphere);
+    models.push_back(model_sphere);*/
 
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-    model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
+    /*model_cylinder.translateMatrix = glm::translate(glm::mat4(1.0f), p_l);
     model_cylinder.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     model_cylinder.modelMatrix = model_cylinder.translateMatrix * model_cylinder.rotateMatrix * model_cylinder.modelMatrix;
     model_sphere.lr = 2;
-    models.push_back(model_cylinder);
+    models.push_back(model_cylinder);*/
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
