@@ -2,8 +2,14 @@
 #include <iostream>
 #include <gl/glm/glm/glm.hpp>
 #include <gl/glew.h>
+#include <vector>
+#include <random> // 랜덤 함수 사용을 위해 추가
 
-void make_line_left(glm::vec3 startPoint, vector<glm::vec3>& lines) {
+void make_line_left(glm::vec3 startPoint, std::vector<glm::vec3>& lines) {
+    // 랜덤 생성기 초기화
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> randomOffset(-1.0f, 1.0f); // -1.0f ~ 1.0f 사이의 랜덤 값
 
     // 시뮬레이션 파라미터 설정
     float gravity = -9.8f;        // 중력 가속도
@@ -16,6 +22,9 @@ void make_line_left(glm::vec3 startPoint, vector<glm::vec3>& lines) {
     glm::vec3 velocity = glm::normalize(glm::vec3(-position.x, -position.y, -position.z)) * initialSpeed;
 
     for (int i = 0; i < numSteps; ++i) {
+        // x축 속도에 약간의 랜덤 오프셋을 추가하여 속도 변동을 줌
+        velocity.x += randomOffset(gen);
+
         // 포지션 업데이트
         position += velocity * timeStep;
 
@@ -34,5 +43,4 @@ void make_line_left(glm::vec3 startPoint, vector<glm::vec3>& lines) {
         // z축이 0에 도달했으면 종료
         if (position.z == 0.0f) break;
     }
-
 }
