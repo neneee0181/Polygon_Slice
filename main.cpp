@@ -10,7 +10,7 @@
 #include "LoadObj.h"
 #include "shaderMaker.h"
 
-using namespace std;
+using namespace std; 
 
 void InitBuffer();
 GLvoid drawScene(GLvoid);
@@ -108,12 +108,23 @@ int main(int argc, char** argv) {
 
     Model modelBoard;
 
-    read_obj_file("obj/box3.obj", modelBoard, "box");
+    read_obj_file("obj/box.obj", modelBoard, "box");
     modelBoard.initialRotation = glm::mat4(1.0f);
     modelBoard.modelMatrix = modelBoard.initialRotation;
     modelBoard.modelMatrix = glm::translate(modelBoard.modelMatrix, glm::vec3(0.0, 0.0, 0.0));
     modelBoard.colors.push_back(glm::vec3(0.0, 0.0, 0.0));
     models.push_back(modelBoard);
+
+
+    for (auto& model : models) {
+        if (!model.material.map_Kd.empty()) {
+            model.material.textureID = loadTexture(model.material.map_Kd);
+            model.material.hasTexture = true; // 텍스처가 있음을 표시
+        }
+        else {
+            model.material.hasTexture = false;
+        }
+    }
 
     InitBuffer();
 
@@ -160,15 +171,25 @@ GLvoid drawScene() {
     for (size_t i = 0; i < models.size(); ++i) {
         glBindVertexArray(vaos[i]);
 
-        GLint KaLoc = glGetUniformLocation(shaderProgramID, "Ka");
-        GLint KdLoc = glGetUniformLocation(shaderProgramID, "Kd");
-        GLint KsLoc = glGetUniformLocation(shaderProgramID, "Ks");
-        GLint NsLoc = glGetUniformLocation(shaderProgramID, "Ns");
+        if (models[i].material.hasTexture) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, models[i].material.textureID);
+            glUniform1i(glGetUniformLocation(shaderProgramID, "texture1"), 0);
+            glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 1);
+        }
+        else {
+            glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 0);
 
-        glUniform3fv(KaLoc, 1, glm::value_ptr(models[i].material.Ka));
-        glUniform3fv(KdLoc, 1, glm::value_ptr(models[i].material.Kd));
-        glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
-        glUniform1f(NsLoc, models[i].material.Ns);
+            GLint KaLoc = glGetUniformLocation(shaderProgramID, "Ka");
+            GLint KdLoc = glGetUniformLocation(shaderProgramID, "Kd");
+            GLint KsLoc = glGetUniformLocation(shaderProgramID, "Ks");
+            GLint NsLoc = glGetUniformLocation(shaderProgramID, "Ns");
+
+            glUniform3fv(KaLoc, 1, glm::value_ptr(models[i].material.Ka));
+            glUniform3fv(KdLoc, 1, glm::value_ptr(models[i].material.Kd));
+            glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
+            glUniform1f(NsLoc, models[i].material.Ns);
+        }
 
         if (models[i].name == "box") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
@@ -220,6 +241,12 @@ void InitBuffer() {
         glBufferData(GL_ARRAY_BUFFER, models[i].normals.size() * sizeof(glm::vec3), models[i].normals.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);  // location 1에 법선 할당
         glEnableVertexAttribArray(1);
+
+        // 텍스처 좌표 VBO 설정
+        glBindBuffer(GL_ARRAY_BUFFER, vbos[i][3]);  // 4번째 VBO가 텍스처 좌표용이라고 가정
+        glBufferData(GL_ARRAY_BUFFER, models[i].texCoords.size() * sizeof(glm::vec2), models[i].texCoords.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);  // location 2에 텍스처 좌표 할당
+        glEnableVertexAttribArray(2);
 
         // 면 인덱스 데이터 (EBO) 설정
         vector<unsigned int> indices;

@@ -2,6 +2,7 @@
 
 layout (location = 0) in vec3 in_Position;  // 정점 위치
 layout (location = 1) in vec3 in_Normal;    // 정점 법선
+layout(location = 2) in vec2 aTexCoords; // 텍스처 좌표
 
 out vec3 FragPos;      // 프래그먼트 위치 (world space)
 out vec3 Normal;       // 프래그먼트의 법선 벡터 (world space)

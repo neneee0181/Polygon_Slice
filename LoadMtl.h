@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Model.h"
+#include "LoadTexture.h"
 
 // MTL 파일을 읽어와서 재질 정보를 파싱하는 함수
 void read_mtl_file(const std::string& filename, Material& material) {
