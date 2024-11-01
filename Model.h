@@ -48,7 +48,7 @@ struct Model {
     std::vector<glm::vec3> colors;      // **각 정점에 대한 색상 배열**
 
     std::string name;
-
+    std::vector<glm::vec3> lines;
     int lr = 0;
 
     GLuint textureID;  // 텍스처 ID 필드 추가

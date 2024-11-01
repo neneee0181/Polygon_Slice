@@ -3,9 +3,7 @@
 #include <gl/glm/glm/glm.hpp>
 #include <gl/glew.h>
 
-void make_line_left(glm::vec3 startPoint, vector<vector<glm::vec3>>& lines) {
-    // 선을 구성할 점들을 저장할 벡터
-    std::vector<glm::vec3> linePoints;
+void make_line_left(glm::vec3 startPoint, vector<glm::vec3>& lines) {
 
     // 시뮬레이션 파라미터 설정
     float gravity = -9.8f;        // 중력 가속도
@@ -31,12 +29,10 @@ void make_line_left(glm::vec3 startPoint, vector<vector<glm::vec3>>& lines) {
         }
 
         // 업데이트된 위치를 선에 추가
-        linePoints.push_back(position);
+        lines.push_back(position);
 
         // z축이 0에 도달했으면 종료
         if (position.z == 0.0f) break;
     }
 
-    // 완성된 선을 lines에 추가
-    lines.push_back(linePoints);
 }

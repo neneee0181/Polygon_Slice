@@ -20,7 +20,7 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 void startTimer(int value);
 void AddModelBuffer(const Model& model);
-void InitLineBuffer();
+void InitLineBuffer(const Model& model);
 
 vector<Model> models;
 vector<GLuint> vaos;
@@ -38,8 +38,6 @@ glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
 glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
 
 Model model_box, model_sphere, model_cylinder;
-
-vector<vector<glm::vec3>> lines;
 
 std::unordered_map<char, bool> keyState;
 
@@ -207,9 +205,9 @@ int main(int argc, char** argv) {
         cout << "GLEW Initialized\n";
 
     cout << "명령어 리스트" << endl;
-    cout << "1 : LINE" << endl;
-    cout << "2 : FILL" << endl;
     cout << "s : start" << endl;
+    cout << "1 : press = LINE || up == FILL" << endl;
+    cout << "2 : press = MODEL_ROAD_LINE || up = NONE" << endl;
 
     make_shaderProgram();
 
@@ -217,7 +215,12 @@ int main(int argc, char** argv) {
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
 
-    make_line_left(p_l, lines);
+    make_line_left(p_l, model_box.lines);
+    make_line_left(p_l, model_sphere.lines);
+    make_line_left(p_l, model_cylinder.lines);
+    InitLineBuffer(model_box);
+    InitLineBuffer(model_sphere);
+    InitLineBuffer(model_cylinder);
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
@@ -230,7 +233,6 @@ int main(int argc, char** argv) {
     }
 
     InitBuffer();
-    InitLineBuffer();
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
@@ -307,17 +309,22 @@ GLvoid drawScene() {
         }
 
         glBindVertexArray(0);
+
+
+        // '2'키가 눌려 있을 때만 모델의 line을 그리기
+        if (isKeyPressed_s('2') && i < lineVAOs.size()) {
+            glBindVertexArray(lineVAOs[i]);
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // 단위 행렬 적용
+            glUniform1i(modelStatus, 1); // 선 렌더링 모드 활성화
+            glLineWidth(1.5f);
+            glDrawArrays(GL_LINE_STRIP, 0, models[i].lines.size());  // 1차원 벡터로 된 line을 그리기
+            glBindVertexArray(0);
+        }
+
     }
 
 
-    for (size_t i = 0; i < lines.size(); ++i) {
-        glBindVertexArray(lineVAOs[i]);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-        glLineWidth(1.5f);
-        glDrawArrays(GL_LINE_STRIP, 0, lines[i].size());
-        glBindVertexArray(0);
-    }
-
+  
     glDisable(GL_DEPTH_TEST);
     glutSwapBuffers();
     GLenum err;
@@ -425,29 +432,26 @@ void AddModelBuffer(const Model& model) {
     glBindVertexArray(0); // VAO unbind
 }
 
-void InitLineBuffer() {
-    // Resize VAO and VBO containers to match the number of lines
-    lineVAOs.resize(lines.size());
-    lineVBOs.resize(lines.size());
+void InitLineBuffer(const Model& model) {
+    GLuint vao;
+    GLuint vbo;
 
-    // Generate VAOs and VBOs for each line path
-    glGenVertexArrays(lineVAOs.size(), lineVAOs.data());
-    glGenBuffers(lineVBOs.size(), lineVBOs.data());
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
-    // Loop over each line in the `lines` vector
-    for (size_t i = 0; i < lines.size(); ++i) {
-        glBindVertexArray(lineVAOs[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, lineVBOs[i]);
+    // VBO 생성
+    glGenBuffers(1, &vbo);
 
-        // Upload line data to the buffer
-        glBufferData(GL_ARRAY_BUFFER, lines[i].size() * sizeof(glm::vec3), lines[i].data(), GL_STATIC_DRAW);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, model.lines.size() * sizeof(glm::vec3), model.lines.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glEnableVertexAttribArray(0);
 
-        // Set up vertex attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
-        glEnableVertexAttribArray(0);
+    lineVAOs.push_back(vao);
+    lineVBOs.push_back(vbo);
 
-        // Unbind VAO and VBO
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
