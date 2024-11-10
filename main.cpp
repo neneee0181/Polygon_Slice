@@ -235,9 +235,8 @@ void rotateTimer(int value) {
 glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t) {
     return 0.5f * ((2.0f * p1) + (-p0 + p2) * t + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t + (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t * t * t);
 }
- 
-void moveTimer(int value) {
 
+void moveTimer(int value) {
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].lines.size() < 4) continue;
 
@@ -251,7 +250,12 @@ void moveTimer(int value) {
         glm::vec3 p3 = models[i].lines[segment + 3];
 
         glm::vec3 interpolatedPosition = catmullRomInterpolation(p0, p1, p2, p3, models[i].moveT - segment);
-        models[i].modelMatrix = glm::translate(glm::mat4(1.0f), interpolatedPosition);
+
+        // 현재 modelMatrix의 자전 부분을 유지하며 새 위치를 적용
+        glm::mat4 rotationMatrix = models[i].modelMatrix;
+        rotationMatrix[3] = glm::vec4(interpolatedPosition, 1.0f); // 위치 업데이트
+
+        models[i].modelMatrix = rotationMatrix; // 자전과 위치 적용
 
         // 이동 속도에 따라 t 증가
         models[i].moveT += moveSpeed;
@@ -264,7 +268,6 @@ void moveTimer(int value) {
         }
     }
 
-    // 장면을 갱신하고 다음 타이머 호출
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
 }
