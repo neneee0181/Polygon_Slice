@@ -269,11 +269,26 @@ void moveTimer(int value) {
     glutTimerFunc(16, moveTimer, ++value);
 }
 
+bool basket_status = false;
 void moveBasket(int value) {
-    float speed = 0.1f;
+    float speed = 0.5f;
 
     glm::mat4 basket_t_matrix = glm::mat4(1.0f);
-    basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(speed, 0.0, 0.0));
+
+    if (model_basket.modelMatrix[3].x <= 110 && !basket_status) {
+        basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(speed, 0.0, 0.0));
+    }
+    else if (model_basket.modelMatrix[3].x >= 110) {
+        basket_status = true;
+    }
+
+    if (model_basket.modelMatrix[3].x >= -110 && basket_status) {
+        basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(-speed, 0.0, 0.0));
+    }
+    else if (model_basket.modelMatrix[3].x <= -110) {
+        basket_status = false;
+    }
+
     model_basket.modelMatrix = basket_t_matrix * model_basket.modelMatrix;
 
     glutPostRedisplay();
