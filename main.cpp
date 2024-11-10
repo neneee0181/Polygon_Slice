@@ -220,12 +220,12 @@ glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, cons
 
 void moveTimer(int value) {
     float moveSpeed = 0.1f; // 보간 속도 조절
-    static float t = 0.0f; // 보간 파라미터 (0.0 ~ 1.0)
+    //static float t = 0.0f; // 보간 파라미터 (0.0 ~ 1.0)
 
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].lines.size() < 4) continue;
 
-        int segment = (int)t; // 현재 구간
+        int segment = (int)models[i].moveT; // 현재 구간
         int nextSegment = (segment + 1) % (models[i].lines.size() - 3);
 
         // 4개의 점을 통해 Catmull-Rom 보간
@@ -234,13 +234,13 @@ void moveTimer(int value) {
         glm::vec3 p2 = models[i].lines[segment + 2];
         glm::vec3 p3 = models[i].lines[segment + 3];
 
-        glm::vec3 interpolatedPosition = catmullRomInterpolation(p0, p1, p2, p3, t - segment);
+        glm::vec3 interpolatedPosition = catmullRomInterpolation(p0, p1, p2, p3, models[i].moveT - segment);
         models[i].modelMatrix = glm::translate(glm::mat4(1.0f), interpolatedPosition);
 
         // 이동 속도에 따라 t 증가
-        t += moveSpeed;
-        if (t >= models[i].lines.size() - 3) {
-            t = 0.0f; // 모든 구간을 다 이동했으면 초기화
+        models[i].moveT += moveSpeed;
+        if (models[i].moveT >= models[i].lines.size() - 3) {
+            models[i].moveT = 0.0f; // 모든 구간을 다 이동했으면 초기화
         }
     }
 
