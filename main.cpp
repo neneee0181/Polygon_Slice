@@ -21,6 +21,8 @@ GLvoid Reshape(int w, int h);
 void startTimer(int value);
 void rotateTimer(int value);
 void moveTimer(int value);
+void moveBasket(int value);
+
 void AddModelBuffer(const Model& model);
 void InitLineBuffer(const Model& model);
 
@@ -97,6 +99,8 @@ void keyDown(unsigned char key, int x, int y) {
         glutTimerFunc(0, startTimer, 0);
         glutTimerFunc(0, rotateTimer, 0);
         glutTimerFunc(0, moveTimer, 0);
+        glutTimerFunc(0, moveBasket, 0);
+
         break;
     case '+':
         if (moveSpeed < 0.02f)
@@ -263,6 +267,17 @@ void moveTimer(int value) {
     // 장면을 갱신하고 다음 타이머 호출
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
+}
+
+void moveBasket(int value) {
+    float speed = 0.1f;
+
+    glm::mat4 basket_t_matrix = glm::mat4(1.0f);
+    basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(speed, 0.0, 0.0));
+    model_basket.modelMatrix = basket_t_matrix * model_basket.modelMatrix;
+
+    glutPostRedisplay();
+    glutTimerFunc(16, moveBasket, 0);
 }
 
 int main(int argc, char** argv) {
