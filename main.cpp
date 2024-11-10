@@ -349,6 +349,10 @@ GLvoid drawScene() {
     GLint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 
     for (size_t i = 0; i < models.size(); ++i) {
+
+        if (!models[i].status)
+            continue;
+
         glBindVertexArray(vaos[i]);
         glLineWidth(1.0f);
         if (models[i].material.hasTexture) {
@@ -370,9 +374,6 @@ GLvoid drawScene() {
             glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
             glUniform1f(NsLoc, models[i].material.Ns);
         }
-
-        if (!models[i].status)
-            continue;
 
         if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
