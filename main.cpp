@@ -213,46 +213,42 @@ void rotateTimer(int value) {
     glutTimerFunc(16, rotateTimer, ++value);
 }
 
+// Catmull-Rom 보간 함수
+glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t) {
+    return 0.5f * ((2.0f * p1) + (-p0 + p2) * t + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t + (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t * t * t);
+}
 
 void moveTimer(int value) {
-    // 이동 속도 조절 변수
-    float moveSpeed = 0.1f; // 이동 속도 조절 (0.01f 정도로 설정하여 느리게 이동)
+    float moveSpeed = 0.1f; // 보간 속도 조절
+    static float t = 0.0f; // 보간 파라미터 (0.0 ~ 1.0)
 
     for (int i = 0; i < models.size(); ++i) {
-        // 모델이 따라갈 경로 (lines)가 있는지 확인
-        if (models[i].lines.size() < 2) continue; // 최소 2개의 점이 있어야 이동 가능
+        if (models[i].lines.size() < 4) continue;
 
-        // 현재 모델의 이동 인덱스를 위한 상태 변수 초기화
-        if (models[i].moveIndex >= models[i].lines.size() - 1) {
-            models[i].moveIndex = 0; // 경로를 반복
-        }
+        int segment = (int)t; // 현재 구간
+        int nextSegment = (segment + 1) % (models[i].lines.size() - 3);
 
-        // 현재 이동할 두 점 (현재 위치와 다음 위치) 가져오기
-        int idx0 = models[i].moveIndex;
-        int idx1 = (idx0 + 1) % models[i].lines.size();
+        // 4개의 점을 통해 Catmull-Rom 보간
+        glm::vec3 p0 = models[i].lines[segment];
+        glm::vec3 p1 = models[i].lines[segment + 1];
+        glm::vec3 p2 = models[i].lines[segment + 2];
+        glm::vec3 p3 = models[i].lines[segment + 3];
 
-        glm::vec3 start = models[i].lines[idx0];
-        glm::vec3 end = models[i].lines[idx1];
-
-        // 이동 비율 계산 (0.0 ~ 1.0)
-        models[i].moveT += moveSpeed;
-        if (models[i].moveT >= 1.0f) {
-            // 다음 점으로 이동
-            models[i].moveT = 0.0f;
-            models[i].moveIndex = idx1;
-        }
-
-        // 선형 보간(LERP)으로 현재 위치 계산
-        glm::vec3 interpolatedPosition = glm::mix(start, end, models[i].moveT);
-
-        // 모델의 위치를 보간된 위치로 설정
+        glm::vec3 interpolatedPosition = catmullRomInterpolation(p0, p1, p2, p3, t - segment);
         models[i].modelMatrix = glm::translate(glm::mat4(1.0f), interpolatedPosition);
+
+        // 이동 속도에 따라 t 증가
+        t += moveSpeed;
+        if (t >= models[i].lines.size() - 3) {
+            t = 0.0f; // 모든 구간을 다 이동했으면 초기화
+        }
     }
 
     // 장면을 갱신하고 다음 타이머 호출
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
 }
+
 int main(int argc, char** argv) {
 
     width = 800;
