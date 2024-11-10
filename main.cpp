@@ -65,13 +65,26 @@ bool isKeyPressed_s(const char& key) {
 void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
     glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
 
-    // OpenGL 좌표계를 맞추기 위해 y를 뒤집음
-    glm::vec3 winCoords = glm::vec3(mouseX, screenHeight - mouseY, 0.0f); // Near plane (0.0 -> near, 1.0 -> far)
+    // OpenGL 좌표계와 맞추기 위해 y 좌표 뒤집기
+    glm::vec3 winCoords_near = glm::vec3(mouseX, screenHeight - mouseY, 0.0f); // Near plane (z = 0.0)
+    glm::vec3 winCoords_far = glm::vec3(mouseX, screenHeight - mouseY, 1.0f);  // Far plane (z = 1.0)
 
-    // Unproject
-    glm::vec3 worldPos = glm::unProject(winCoords, view * model, projection, viewport);
+    // Near, Far plane의 unproject 결과로 두 개의 world position 얻기
+    glm::vec3 worldPos_near = glm::unProject(winCoords_near, view * model, projection, viewport);
+    glm::vec3 worldPos_far = glm::unProject(winCoords_far, view * model, projection, viewport);
 
-    std::cout << "3D Position: (" << worldPos.x << ", " << worldPos.y << ", " << worldPos.z << ")" << std::endl;
+    std::cout << "Near Plane 3D Position: (" << worldPos_near.x << ", " << worldPos_near.y << ", " << worldPos_near.z << ")" << std::endl;
+    std::cout << "Far Plane 3D Position: (" << worldPos_far.x << ", " << worldPos_far.y << ", " << worldPos_far.z << ")" << std::endl;
+
+    // Near와 Far 사이의 방향 벡터 계산 (정규화된 방향 벡터)
+    glm::vec3 direction = glm::normalize(worldPos_far - worldPos_near);
+
+    // 예시: 특정 깊이에서의 위치를 계산 (이 경우, z = -100 위치에서의 점을 찾기)
+    float targetDepth = -100.0f;
+    float t = (targetDepth - worldPos_near.z) / direction.z;
+    glm::vec3 targetPosition = worldPos_near + t * direction;
+
+    std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
 }
 
 GLvoid Reshape(int w, int h) {
@@ -160,7 +173,7 @@ void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
     }
-        std::cout << "x = " << x << " y = " << y << std::endl;
+        //std::cout << "x = " << x << " y = " << y << std::endl;
     glutPostRedisplay();
 } 
 
