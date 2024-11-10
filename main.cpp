@@ -43,7 +43,8 @@ Model model_box, model_sphere, model_cylinder, model_plane;
 
 std::unordered_map<char, bool> keyState;
 
-int model_speed = 120;
+int model_speed = 120; // 모델 생성 시간
+float moveSpeed = 0.1f; // 보간 속도 조절 (모델 속도)
 
 void keyDown_s(const char& key) {
     keyState[key] = true;
@@ -96,17 +97,28 @@ void keyDown(unsigned char key, int x, int y) {
         glutTimerFunc(0, moveTimer, 0);
         break;
     case '+':
+        if (moveSpeed < 0.02f)
+            break;
+        moveSpeed = moveSpeed - 0.01f;
+        cout << "모델 속도 = " + to_string(moveSpeed) << endl;
+        break;
+    case '-':
+        if (moveSpeed > 2.0f)
+            break;
+        moveSpeed = moveSpeed + 0.01f;
+        cout << " 모델 속도 = " + to_string(moveSpeed) << endl;
+        break;
+    case '[':
         if (model_speed <= 60)
             break;
         --model_speed;
         cout << "폴리곤 생성 시간 ms = " + to_string(model_speed) << endl;
         break;
-    case '-':
+    case ']':
         if (model_speed >= 300)
             break;
         ++model_speed;
         cout << "폴리곤 생성 시간 ms = " + to_string(model_speed) << endl;
-        
         break;
     default:
         break;
@@ -219,8 +231,6 @@ glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, cons
 }
 
 void moveTimer(int value) {
-    float moveSpeed = 0.1f; // 보간 속도 조절
-    //static float t = 0.0f; // 보간 파라미터 (0.0 ~ 1.0)
 
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].lines.size() < 4) continue;
