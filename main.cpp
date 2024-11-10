@@ -213,12 +213,46 @@ void rotateTimer(int value) {
     glutTimerFunc(16, rotateTimer, ++value);
 }
 
-void moveTimer(int value) {
 
+void moveTimer(int value) {
+    // 이동 속도 조절 변수
+    float moveSpeed = 0.1f; // 이동 속도 조절 (0.01f 정도로 설정하여 느리게 이동)
+
+    for (int i = 0; i < models.size(); ++i) {
+        // 모델이 따라갈 경로 (lines)가 있는지 확인
+        if (models[i].lines.size() < 2) continue; // 최소 2개의 점이 있어야 이동 가능
+
+        // 현재 모델의 이동 인덱스를 위한 상태 변수 초기화
+        if (models[i].moveIndex >= models[i].lines.size() - 1) {
+            models[i].moveIndex = 0; // 경로를 반복
+        }
+
+        // 현재 이동할 두 점 (현재 위치와 다음 위치) 가져오기
+        int idx0 = models[i].moveIndex;
+        int idx1 = (idx0 + 1) % models[i].lines.size();
+
+        glm::vec3 start = models[i].lines[idx0];
+        glm::vec3 end = models[i].lines[idx1];
+
+        // 이동 비율 계산 (0.0 ~ 1.0)
+        models[i].moveT += moveSpeed;
+        if (models[i].moveT >= 1.0f) {
+            // 다음 점으로 이동
+            models[i].moveT = 0.0f;
+            models[i].moveIndex = idx1;
+        }
+
+        // 선형 보간(LERP)으로 현재 위치 계산
+        glm::vec3 interpolatedPosition = glm::mix(start, end, models[i].moveT);
+
+        // 모델의 위치를 보간된 위치로 설정
+        models[i].modelMatrix = glm::translate(glm::mat4(1.0f), interpolatedPosition);
+    }
+
+    // 장면을 갱신하고 다음 타이머 호출
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
 }
-
 int main(int argc, char** argv) {
 
     width = 800;

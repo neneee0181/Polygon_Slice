@@ -52,5 +52,8 @@ struct Model {
     std::vector<glm::vec3> lines;
     int lr = 0;
 
+    int moveIndex = 0;            // 현재 이동 중인 점의 인덱스
+    float moveT = 0.0f;           // 현재 보간 비율 (0.0 ~ 1.0)
+
     GLuint textureID;  // 텍스처 ID 필드 추가
 };
