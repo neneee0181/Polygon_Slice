@@ -29,6 +29,8 @@ vector<GLuint> vaos;
 vector<vector<GLuint>> vbos;
 std::vector<GLuint> lineVAOs;
 std::vector<GLuint> lineVBOs;
+GLuint basketVAO;
+GLuint basketVBO[4];
 
 glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 200.0);
 glm::vec3 cameraDirection = glm::vec3(0.0, 0.0, 0.0);
@@ -39,7 +41,7 @@ glm::mat4 view = glm::mat4(1.0f);
 glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
 glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
 
-Model model_box, model_sphere, model_cylinder, model_plane;
+Model model_box, model_sphere, model_cylinder, model_plane, model_basket;
 
 std::unordered_map<char, bool> keyState;
 
@@ -74,7 +76,7 @@ GLvoid Reshape(int w, int h) {
     glViewport(0, 0, w, h);
     width = w;
     height = h;
-}
+}     
 
 void keyUp(unsigned char key, int x, int y) {
     keyUp_s(key);
@@ -229,7 +231,7 @@ void rotateTimer(int value) {
 glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t) {
     return 0.5f * ((2.0f * p1) + (-p0 + p2) * t + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t + (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t * t * t);
 }
-
+ 
 void moveTimer(int value) {
 
     for (int i = 0; i < models.size(); ++i) {
@@ -292,8 +294,16 @@ int main(int argc, char** argv) {
     read_obj_file("obj/box.obj", model_box, "box");
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
-    //read_obj_file("obj/plane.obj", model_plane, "model_plane");
+    read_obj_file("obj/plane.obj", model_plane, "plane");
+    read_obj_file("obj/basket.obj", model_basket, "basket");
 
+    // basket setting
+    glm::mat4 basket_t_matrix = glm::mat4(1.0f);
+    basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(0.0, -80.0, -30.0));
+
+    glm::mat4 basket_s_matrix = glm::mat4(1.0f);
+    basket_s_matrix = glm::scale(basket_s_matrix, glm::vec3(1.3, 1.3, 1.3));
+    model_basket.modelMatrix = basket_t_matrix * basket_s_matrix * model_basket.modelMatrix;
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
@@ -316,6 +326,32 @@ int main(int argc, char** argv) {
     glutMainLoop();
 
     return 0;
+}
+
+void drawBasket(GLint modelLoc, GLint modelStatus) {
+
+    glBindVertexArray(basketVAO);
+    glLineWidth(1.0f);
+    glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 0);
+    GLint KaLoc = glGetUniformLocation(shaderProgramID, "Ka");
+    GLint KdLoc = glGetUniformLocation(shaderProgramID, "Kd");
+    GLint KsLoc = glGetUniformLocation(shaderProgramID, "Ks");
+    GLint NsLoc = glGetUniformLocation(shaderProgramID, "Ns");
+    glUniform3fv(KaLoc, 1, glm::value_ptr(model_basket.material.Ka));
+    glUniform3fv(KdLoc, 1, glm::value_ptr(model_basket.material.Kd));
+    glUniform3fv(KsLoc, 1, glm::value_ptr(model_basket.material.Ks));
+    glUniform1f(NsLoc, model_basket.material.Ns);
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_basket.modelMatrix));
+    glUniform1i(modelStatus, 0);
+    if (isKeyPressed_s('1'))
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDrawElements(GL_TRIANGLES, model_basket.faces.size() * 3, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+
 }
 
 GLvoid drawScene() {
@@ -348,6 +384,8 @@ GLvoid drawScene() {
     GLint modelStatus = glGetUniformLocation(shaderProgramID, "modelStatus");
     GLint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 
+    drawBasket(modelLoc, modelStatus);
+
     for (size_t i = 0; i < models.size(); ++i) {
 
         if (!models[i].status)
@@ -375,7 +413,7 @@ GLvoid drawScene() {
             glUniform1f(NsLoc, models[i].material.Ns);
         }
 
-        if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere") {
+        if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere" || models[i].name == "plane" || models[i].name == "basket") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
             glUniform1i(modelStatus, 0);
             if (isKeyPressed_s('1'))
@@ -400,7 +438,6 @@ GLvoid drawScene() {
 
     }
 
-
   
     glDisable(GL_DEPTH_TEST);
     glutSwapBuffers();
@@ -413,6 +450,40 @@ GLvoid drawScene() {
 // 버퍼 초기화 함수
 void InitBuffer() {
 
+    glGenVertexArrays(1, &basketVAO);
+    glBindVertexArray(basketVAO);
+
+    glGenBuffers(4, basketVBO);
+
+    // 정점 버퍼 설정
+    glBindBuffer(GL_ARRAY_BUFFER, basketVBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, model_basket.vertices.size() * sizeof(glm::vec3), model_basket.vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);  // location 0에 정점 할당
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, basketVBO[2]);  // 법선용 VBO
+    glBufferData(GL_ARRAY_BUFFER, model_basket.normals.size() * sizeof(glm::vec3), model_basket.normals.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);  // location 1에 법선 할당
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, basketVBO[3]);  // 4번째 VBO가 텍스처 좌표용이라고 가정
+    glBufferData(GL_ARRAY_BUFFER, model_basket.texCoords.size() * sizeof(glm::vec2), model_basket.texCoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);  // location 2에 텍스처 좌표 할당
+    glEnableVertexAttribArray(2);
+
+    vector<unsigned int> indices_basket;
+    for (const Face& face : model_basket.faces) {
+        indices_basket.push_back(face.v1);
+        indices_basket.push_back(face.v2);
+        indices_basket.push_back(face.v3);
+    }
+
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_basket.size() * sizeof(unsigned int), indices_basket.data(), GL_STATIC_DRAW);
+
+    //-----------------------------------------------------------------------------------------------------------
     vaos.resize(models.size());
     vbos.resize(models.size(), vector<GLuint>(4)); // 모델마다 4개의 VBO가 필요 (정점, 색상, 법선, 텍스처 좌표)
 
