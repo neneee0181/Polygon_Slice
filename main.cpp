@@ -44,7 +44,7 @@ Model model_box, model_sphere, model_cylinder, model_plane;
 std::unordered_map<char, bool> keyState;
 
 int model_speed = 120; // 모델 생성 시간
-float moveSpeed = 0.1f; // 보간 속도 조절 (모델 속도)
+float moveSpeed = 0.25f; // 보간 속도 조절 (모델 속도)
 
 void keyDown_s(const char& key) {
     keyState[key] = true;
@@ -103,7 +103,7 @@ void keyDown(unsigned char key, int x, int y) {
         cout << "모델 속도 = " + to_string(moveSpeed) << endl;
         break;
     case '-':
-        if (moveSpeed > 2.0f)
+        if (moveSpeed > 4.0f)
             break;
         moveSpeed = moveSpeed + 0.01f;
         cout << " 모델 속도 = " + to_string(moveSpeed) << endl;
@@ -252,6 +252,10 @@ void moveTimer(int value) {
         if (models[i].moveT >= models[i].lines.size() - 3) {
             models[i].moveT = 0.0f; // 모든 구간을 다 이동했으면 초기화
         }
+
+        if (models[i].modelMatrix[3].y <= -100) {
+            models[i].status = false;
+        }
     }
 
     // 장면을 갱신하고 다음 타이머 호출
@@ -366,6 +370,9 @@ GLvoid drawScene() {
             glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
             glUniform1f(NsLoc, models[i].material.Ns);
         }
+
+        if (!models[i].status)
+            continue;
 
         if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere") {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
