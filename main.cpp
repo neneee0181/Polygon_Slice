@@ -37,7 +37,7 @@ glm::mat4 view = glm::mat4(1.0f);
 glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
 glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
 
-Model model_box, model_sphere, model_cylinder;
+Model model_box, model_sphere, model_cylinder, model_plane;
 
 std::unordered_map<char, bool> keyState;
 
@@ -181,10 +181,10 @@ void startTimer(int value) {
         default:
             break;
         }
+        model.material.hasTexture = false;
 
         make_line_left(model.lr == 1 ? p_l : p_r, model.lines);
         InitLineBuffer(model);
-
         models.push_back(model);
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
@@ -231,6 +231,8 @@ int main(int argc, char** argv) {
     read_obj_file("obj/box.obj", model_box, "box");
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
+    //read_obj_file("obj/plane.obj", model_plane, "model_plane");
+
 
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
