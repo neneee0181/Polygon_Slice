@@ -270,6 +270,7 @@ void moveTimer(int value) {
 }
 
 bool basket_status = false;
+
 void moveBasket(int value) {
     float speed = 0.5f;
 
@@ -406,8 +407,8 @@ GLvoid drawScene() {
 
     GLint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
     GLint lightColorLoc = glGetUniformLocation(shaderProgramID, "lightColor");
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-glm::vec3(0.0, 600.0, 900.0)));
-    glUniform3fv(lightColorLoc, 1, glm::value_ptr(glm::vec3(1.0f, 0.95f, 0.9f)));
+    glUniform3fv(lightPosLoc, 1, glm::value_ptr(-glm::vec3(900.0, -900.0, -900.0)));
+    glUniform3fv(lightColorLoc, 1, glm::value_ptr(glm::vec3(0.6f, 0.65f, 0.6f)));
 
     glEnable(GL_DEPTH_TEST);
 
