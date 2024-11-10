@@ -19,6 +19,8 @@ void InitBuffer();
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 void startTimer(int value);
+void rotateTimer(int value);
+void moveTimer(int value);
 void AddModelBuffer(const Model& model);
 void InitLineBuffer(const Model& model);
 
@@ -90,6 +92,8 @@ void keyDown(unsigned char key, int x, int y) {
     case 's':
         cout << "-------- START --------" << endl;
         glutTimerFunc(0, startTimer, 0);
+        glutTimerFunc(0, rotateTimer, 0);
+        glutTimerFunc(0, moveTimer, 0);
         break;
     case '+':
         if (model_speed <= 60)
@@ -189,6 +193,13 @@ void startTimer(int value) {
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
 
+
+    glutPostRedisplay();
+    glutTimerFunc(16, startTimer, ++value);
+}
+
+void rotateTimer(int value) {
+
     // 자전
     for (int i = 0; i < models.size(); ++i) {
         glm::mat4 matrix = glm::mat4(1.0f);
@@ -199,7 +210,13 @@ void startTimer(int value) {
     }
 
     glutPostRedisplay();
-    glutTimerFunc(16, startTimer, ++value);
+    glutTimerFunc(16, rotateTimer, ++value);
+}
+
+void moveTimer(int value) {
+
+    glutPostRedisplay();
+    glutTimerFunc(16, moveTimer, ++value);
 }
 
 int main(int argc, char** argv) {
