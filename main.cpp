@@ -407,6 +407,11 @@ GLvoid drawScene() {
 
     glUseProgram(shaderProgramID);
 
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "Error in glUseProgram: " << error << std::endl;
+    }
+
     view = glm::mat4(1.0f);
     view = glm::lookAt(
         cameraPos,
