@@ -60,6 +60,7 @@ struct Model {
 
     bool model_status = true;
     bool line_status = true;
+    bool basket_in = false;
 
     // Bullet Physics를 위한 멤버 추가
     btRigidBody* rigidBody = nullptr;  // 각 모델에 대한 RigidBody 포인터 추가

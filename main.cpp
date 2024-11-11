@@ -247,11 +247,13 @@ void rotateTimer(int value) {
 
     // ÀÚÀü
     for (int i = 0; i < models.size(); ++i) {
-        glm::mat4 matrix = glm::mat4(1.0f);
-        matrix = glm::translate(matrix, glm::vec3(models[i].modelMatrix[3]));
-        matrix = glm::rotate(matrix, glm::radians(0.5f), glm::vec3(models[i].r_r == 0 ? 1.0 : 0.0, models[i].r_r == 1 ? 1.0 : 0.0, models[i].r_r == 2 ? 1.0 : 0.0));
-        matrix = glm::translate(matrix, glm::vec3(-models[i].modelMatrix[3]));
-        models[i].modelMatrix = matrix * models[i].modelMatrix;
+        if (models[i].line_status && models[i].model_status) {
+            glm::mat4 matrix = glm::mat4(1.0f);
+            matrix = glm::translate(matrix, glm::vec3(models[i].modelMatrix[3]));
+            matrix = glm::rotate(matrix, glm::radians(0.5f), glm::vec3(models[i].r_r == 0 ? 1.0 : 0.0, models[i].r_r == 1 ? 1.0 : 0.0, models[i].r_r == 2 ? 1.0 : 0.0));
+            matrix = glm::translate(matrix, glm::vec3(-models[i].modelMatrix[3]));
+            models[i].modelMatrix = matrix * models[i].modelMatrix;
+        }
     }
 
     glutPostRedisplay();
@@ -297,6 +299,9 @@ void moveTimer(int value) {
         if (models[i].modelMatrix[3].y <= -150) {
             models[i].model_status = false;
             models[i].line_status = false;
+            models[i].basket_in = true;
+
+            removeRigidBodyFromModel(models[i]);
         }
     }
 
@@ -313,9 +318,16 @@ void moveBasket(int value) {
     float speed = 0.5f;
 
     glm::mat4 basket_t_matrix = glm::mat4(1.0f);
+    glm::mat4 models_t_matrix = glm::mat4(1.0f);
 
     if (model_basket.modelMatrix[3].x <= 110 && !basket_status) {
         basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(speed, 0.0, 0.0));
+
+        for (auto& model : models) {
+            if (model.model_status && !model.line_status) {
+                model.modelMatrix = basket_t_matrix * model.modelMatrix;
+            }
+        }
     }
     else if (model_basket.modelMatrix[3].x >= 110) {
         basket_status = true;
@@ -323,6 +335,12 @@ void moveBasket(int value) {
 
     if (model_basket.modelMatrix[3].x >= -110 && basket_status) {
         basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(-speed, 0.0, 0.0));
+
+        for (auto& model : models) {
+            if (model.model_status && !model.line_status) {
+                model.modelMatrix = basket_t_matrix * model.modelMatrix;
+            }
+        }
     }
     else if (model_basket.modelMatrix[3].x <= -110) {
         basket_status = false;
@@ -467,9 +485,6 @@ GLvoid drawScene() {
     drawBasket(modelLoc, modelStatus);
 
     for (size_t i = 0; i < models.size(); ++i) {
-
-        /*if (!models[i].model_status && !models[i].line_status)
-            continue;*/
 
         if (models[i].model_status) {
             glBindVertexArray(vaos[i]);

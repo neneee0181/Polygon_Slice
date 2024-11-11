@@ -1,12 +1,15 @@
 #pragma once
 
 #include <limits>  // std::numeric_limits 사용을 위한 헤더 추가
+#include <gl/glm/glm/glm.hpp>
 
 #include "Model.h"
 #include "CustomContactResultCallback.h"
 
 #include"include/btBulletCollisionCommon.h"
 #include"include/btBulletDynamicsCommon.h"
+
+void removeRigidBodyFromModel(Model& model);
 
 // Bullet Physics 관련 변수들
 btBroadphaseInterface* broadphase;
@@ -107,6 +110,11 @@ void initializeModelsWithPhysics(std::vector<Model>& models) {
     }
 }
 
+random_device rd_b;
+mt19937 gen_b(rd_b());
+uniform_real_distribution<> basket_r_dis(-10.0, 10.0);
+uniform_real_distribution<> basket_r_y_dis(-8.0, -2.0);
+
 void updatePhysics(std::vector<Model>& models, Model& model_basket) {
     CustomContactResultCallback resultCallback;
 
@@ -136,25 +144,31 @@ void updatePhysics(std::vector<Model>& models, Model& model_basket) {
 
             // 충돌이 감지되었는지 확인
             if (resultCallback.hitDetected) {
-                // 충돌이 감지되었을 때 수행할 작업 (예: 바구니 내부로 모델 이동)
-                std::cout << "Model collided with the basket!" << std::endl;
-
-                //// 모델을 바구니 내부로 이동시키기
-                //btTransform transform;
-                //transform.setIdentity();
-                //btVector3 basketPosition = model_basket.rigidBody->getWorldTransform().getOrigin();
-                //transform.setOrigin(basketPosition + btVector3(0, 10, 0)); // 바구니 내부에 약간 띄워서 위치
-
-                //model.rigidBody->setWorldTransform(transform);
-                //model.rigidBody->getMotionState()->setWorldTransform(transform);
-
-                //// 모델이 더 이상 물리 엔진의 영향을 받지 않도록 설정
-                //model.rigidBody->setLinearVelocity(btVector3(0, 0, 0));
-                //model.rigidBody->setAngularVelocity(btVector3(0, 0, 0));
-                //model.rigidBody->setGravity(btVector3(0, 0, 0));
-
                 // 모델을 비활성화하거나 상태를 업데이트
                 model.line_status = false;
+
+                // 모델의 현재 회전 상태를 유지
+                glm::mat4 rotationMatrix = glm::mat4(1.0f);
+                rotationMatrix[0] = glm::vec4(model.modelMatrix[0]); // x축 회전
+                rotationMatrix[1] = glm::vec4(model.modelMatrix[1]); // y축 회전
+                rotationMatrix[2] = glm::vec4(model.modelMatrix[2]); // z축 회전
+
+                // 바구니 위치로 이동 (바구니의 중심으로 모델을 이동)
+                glm::vec3 basketPosition(
+                    model_basket.modelMatrix[3].x + basket_r_dis(gen_b),
+                    model_basket.modelMatrix[3].y + basket_r_y_dis(gen_b),
+                    model_basket.modelMatrix[3].z + basket_r_dis(gen_b)
+                );
+                glm::mat4 translateMatrix = glm::translate(glm::mat4(1.0f), basketPosition + glm::vec3(0, 10, 0));
+
+                // 모델을 바구니 안에 작게 배치하도록 스케일 적용
+                glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 0.2f, 0.2f));
+
+                // 모델 행렬 업데이트 (스케일, 위치, 마지막 회전 적용)
+                model.modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+
+                // 모델의 RigidBody만 제거하여 물리 엔진의 영향을 받지 않도록 함
+                removeRigidBodyFromModel(model);
             }
         }
     }
@@ -185,4 +199,39 @@ void cleanupPhysics() {
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
+}
+
+// 특정 모델을 삭제하는 함수
+void removeModelFromWorld(std::vector<Model>& models, Model& modelToDelete) {
+    // 물리 세계에서 모델의 RigidBody 제거
+    if (modelToDelete.rigidBody) {
+        dynamicsWorld->removeRigidBody(modelToDelete.rigidBody);
+
+        // RigidBody에 할당된 리소스 해제
+        delete modelToDelete.rigidBody->getMotionState();
+        delete modelToDelete.rigidBody;
+        modelToDelete.rigidBody = nullptr;
+    }
+
+    // models 벡터에서 해당 모델 제거
+    auto it = std::find_if(models.begin(), models.end(), [&](const Model& model) {
+        return &model == &modelToDelete;
+        });
+
+    if (it != models.end()) {
+        models.erase(it);
+    }
+}
+
+// 특정 모델의 RigidBody만 제거하는 함수
+void removeRigidBodyFromModel(Model& model) {
+    if (model.rigidBody) {
+        // 물리 세계에서 RigidBody 제거
+        dynamicsWorld->removeRigidBody(model.rigidBody);
+
+        // RigidBody에 할당된 리소스 해제
+        delete model.rigidBody->getMotionState();
+        delete model.rigidBody;
+        model.rigidBody = nullptr;
+    }
 }
