@@ -140,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BulletPhysics.h" />
+    <ClInclude Include="CustomContactResultCallback.h" />
     <ClInclude Include="filetobuf.h" />
     <ClInclude Include="LineMaker.h" />
     <ClInclude Include="LoadMtl.h" />

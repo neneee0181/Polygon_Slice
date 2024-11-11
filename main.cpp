@@ -63,6 +63,16 @@ bool isKeyPressed_s(const char& key) {
     return keyState[key];
 }
 
+// Bullet Physics 초기화
+void InitPhysics() {
+    initPhysics(); // Bullet 초기화 함수 호출
+    initializeModelsWithPhysics(models); // 모든 모델을 물리 세계에 추가
+}
+
+void CleanupPhysics() {
+    cleanupPhysics(); // Bullet 메모리 해제
+}
+
 void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
     glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
 
@@ -219,6 +229,9 @@ void startTimer(int value) {
         }
         model.material.hasTexture = false;
 
+        // 물리 엔진에 새 모델을 추가
+        addModelToPhysicsWorld(model);
+
         make_line_left(model.lr == 1 ? p_l : p_r, model.lines);
         InitLineBuffer(model);
         models.push_back(model);
@@ -339,6 +352,9 @@ int main(int argc, char** argv) {
 
     make_shaderProgram();
 
+    //bullet 초기화
+    InitPhysics();
+
     read_obj_file("obj/box.obj", model_box, "box");
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
@@ -353,6 +369,8 @@ int main(int argc, char** argv) {
     basket_s_matrix = glm::scale(basket_s_matrix, glm::vec3(1.3, 1.3, 1.3));
     model_basket.modelMatrix = basket_t_matrix * basket_s_matrix * model_basket.modelMatrix;
 
+    addModelToPhysicsWorld(model_basket);
+
     for (auto& model : models) {
         if (!model.material.map_Kd.empty()) {
             model.material.textureID = loadTexture(model.material.map_Kd);
@@ -362,10 +380,6 @@ int main(int argc, char** argv) {
             model.material.hasTexture = false;
         }
     }
-    // Bullet Physics 초기화
-    initPhysics();
-    initializeModelsWithPhysics(models);
-
 
     InitBuffer();
 
@@ -409,6 +423,9 @@ void drawBasket(GLint modelLoc, GLint modelStatus) {
 GLvoid drawScene() {
     glClearColor(1.0, 1.0, 1.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // 매 프레임마다 물리 시뮬레이션을 업데이트
+    updatePhysics(models,model_basket); // deltaTime을 1/60초로 설정 (60 FPS 기준)
 
     glUseProgram(shaderProgramID);
 
