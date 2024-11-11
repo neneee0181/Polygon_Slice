@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>  // std::numeric_limits 사용을 위한 헤더 추가
 
 #include "Model.h"
 #include "CustomContactResultCallback.h"
@@ -24,9 +25,41 @@ void initPhysics() {
     dynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
 }
 
+// Model의 AABB를 계산하여 크기를 반환하는 함수
+glm::vec3 calculateModelSize(const Model& model) {
+    // 초기 최소, 최대값을 설정
+    float minX = std::numeric_limits<float>::max();
+    float minY = std::numeric_limits<float>::max();
+    float minZ = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float maxY = std::numeric_limits<float>::lowest();
+    float maxZ = std::numeric_limits<float>::lowest();
+
+    // 모든 정점을 순회하며 최소, 최대값 업데이트
+    for (const Vertex& vertex : model.vertices) {
+        if (vertex.x < minX) minX = vertex.x;
+        if (vertex.y < minY) minY = vertex.y;
+        if (vertex.z < minZ) minZ = vertex.z;
+        if (vertex.x > maxX) maxX = vertex.x;
+        if (vertex.y > maxY) maxY = vertex.y;
+        if (vertex.z > maxZ) maxZ = vertex.z;
+    }
+
+    // 폭, 높이, 깊이를 계산
+    float width = maxX - minX;
+    float height = maxY - minY;
+    float depth = maxZ - minZ;
+
+    return glm::vec3(width, height, depth);
+}
+
 // 모델에 대한 충돌 객체와 강체 생성 및 물리 세계에 추가
 void addModelToPhysicsWorld(Model& model) {
-    btCollisionShape* shape = new btBoxShape(btVector3(10, 10, 10));
+    // 모델의 크기를 계산
+    glm::vec3 size = calculateModelSize(model);
+
+    // Bullet Physics에서는 반지름을 사용하므로, 크기의 절반을 사용
+    btCollisionShape* shape = new btBoxShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
 
     btTransform startTransform;
     startTransform.setIdentity();
