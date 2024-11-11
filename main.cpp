@@ -191,6 +191,7 @@ void mouse(int button, int state, int x, int y) {
 random_device rd;
 mt19937 gen(rd());
 uniform_int_distribution<> dis_model(0, 2);
+uniform_int_distribution<> dis_model2(0, 3);
 uniform_int_distribution<> dis_rl(0, 1);
 
 void startTimer(int value) {
@@ -201,7 +202,7 @@ void startTimer(int value) {
         int lr = dis_rl(gen);
         Model model;
         glm::mat4 matrix = glm::mat4(1.0f);
-        switch (dis_model(gen))
+        switch (dis_model2(gen))
         {
         case 0:
             model = model_box;
@@ -219,6 +220,13 @@ void startTimer(int value) {
             break;
         case 2:
             model = model_cylinder;
+            model.lr = lr;
+            model.r_r = dis_model(gen);
+            matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
+            model.modelMatrix = matrix * model.modelMatrix;
+            break;
+        case 3:
+            model = model_plane;
             model.lr = lr;
             model.r_r = dis_model(gen);
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
