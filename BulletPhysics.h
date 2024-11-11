@@ -78,10 +78,7 @@ void addModelToPhysicsWorld(Model& model) {
         shape = new btCylinderShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
     }
     else if (model.name == "plane") {
-        // Plane 형태의 충돌 경계 생성
-        btVector3 planeNormal(0, 1, 0);  // 평면의 법선 (y축 방향)
-        btScalar planeConstant = 0;      // 원점을 기준으로 하는 평면
-        shape = new btStaticPlaneShape(planeNormal, planeConstant);
+        shape = new btBoxShape(btVector3(size.x * 0.5f, 0.1f, size.z * 0.5f));
     }
     else {
         // 기본값으로 Box 형태 사용 (예외 처리를 위해)
