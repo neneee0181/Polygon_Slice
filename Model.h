@@ -58,7 +58,8 @@ struct Model {
 
     GLuint textureID;  // 텍스처 ID 필드 추가
 
-    bool status = true;
+    bool model_status = true;
+    bool line_status = true;
 
     // Bullet Physics를 위한 멤버 추가
     btRigidBody* rigidBody = nullptr;  // 각 모델에 대한 RigidBody 포인터 추가

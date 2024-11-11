@@ -139,22 +139,22 @@ void updatePhysics(std::vector<Model>& models, Model& model_basket) {
                 // 충돌이 감지되었을 때 수행할 작업 (예: 바구니 내부로 모델 이동)
                 std::cout << "Model collided with the basket!" << std::endl;
 
-                // 모델을 바구니 내부로 이동시키기
-                btTransform transform;
-                transform.setIdentity();
-                btVector3 basketPosition = model_basket.rigidBody->getWorldTransform().getOrigin();
-                transform.setOrigin(basketPosition + btVector3(0, 10, 0)); // 바구니 내부에 약간 띄워서 위치
+                //// 모델을 바구니 내부로 이동시키기
+                //btTransform transform;
+                //transform.setIdentity();
+                //btVector3 basketPosition = model_basket.rigidBody->getWorldTransform().getOrigin();
+                //transform.setOrigin(basketPosition + btVector3(0, 10, 0)); // 바구니 내부에 약간 띄워서 위치
 
-                model.rigidBody->setWorldTransform(transform);
-                model.rigidBody->getMotionState()->setWorldTransform(transform);
+                //model.rigidBody->setWorldTransform(transform);
+                //model.rigidBody->getMotionState()->setWorldTransform(transform);
 
-                // 모델이 더 이상 물리 엔진의 영향을 받지 않도록 설정
-                model.rigidBody->setLinearVelocity(btVector3(0, 0, 0));
-                model.rigidBody->setAngularVelocity(btVector3(0, 0, 0));
-                model.rigidBody->setGravity(btVector3(0, 0, 0));
+                //// 모델이 더 이상 물리 엔진의 영향을 받지 않도록 설정
+                //model.rigidBody->setLinearVelocity(btVector3(0, 0, 0));
+                //model.rigidBody->setAngularVelocity(btVector3(0, 0, 0));
+                //model.rigidBody->setGravity(btVector3(0, 0, 0));
 
                 // 모델을 비활성화하거나 상태를 업데이트
-                model.status = false;
+                model.line_status = false;
             }
         }
     }

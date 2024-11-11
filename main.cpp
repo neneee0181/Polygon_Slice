@@ -265,6 +265,10 @@ glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, cons
 
 void moveTimer(int value) {
     for (int i = 0; i < models.size(); ++i) {
+        
+        if (!models[i].line_status && models[i].model_status)
+            continue;
+
         if (models[i].lines.size() < 4) continue;
 
         int segment = (int)models[i].moveT; // 현재 구간
@@ -290,8 +294,9 @@ void moveTimer(int value) {
             models[i].moveT = 0.0f; // 모든 구간을 다 이동했으면 초기화
         }
 
-        if (models[i].modelMatrix[3].y <= -100) {
-            models[i].status = false;
+        if (models[i].modelMatrix[3].y <= -150) {
+            models[i].model_status = false;
+            models[i].line_status = false;
         }
     }
 
@@ -463,54 +468,56 @@ GLvoid drawScene() {
 
     for (size_t i = 0; i < models.size(); ++i) {
 
-        if (!models[i].status)
-            continue;
+        /*if (!models[i].model_status && !models[i].line_status)
+            continue;*/
 
-        glBindVertexArray(vaos[i]);
-        glLineWidth(1.0f);
-        if (models[i].material.hasTexture) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, models[i].material.textureID);
-            glUniform1i(glGetUniformLocation(shaderProgramID, "texture1"), 0);
-            glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 1);
-        }
-        else {
-            glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 0);
+        if (models[i].model_status) {
+            glBindVertexArray(vaos[i]);
+            glLineWidth(1.0f);
+            if (models[i].material.hasTexture) {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, models[i].material.textureID);
+                glUniform1i(glGetUniformLocation(shaderProgramID, "texture1"), 0);
+                glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 1);
+            }
+            else {
+                glUniform1i(glGetUniformLocation(shaderProgramID, "hasTexture"), 0);
 
-            GLint KaLoc = glGetUniformLocation(shaderProgramID, "Ka");
-            GLint KdLoc = glGetUniformLocation(shaderProgramID, "Kd");
-            GLint KsLoc = glGetUniformLocation(shaderProgramID, "Ks");
-            GLint NsLoc = glGetUniformLocation(shaderProgramID, "Ns");
+                GLint KaLoc = glGetUniformLocation(shaderProgramID, "Ka");
+                GLint KdLoc = glGetUniformLocation(shaderProgramID, "Kd");
+                GLint KsLoc = glGetUniformLocation(shaderProgramID, "Ks");
+                GLint NsLoc = glGetUniformLocation(shaderProgramID, "Ns");
 
-            glUniform3fv(KaLoc, 1, glm::value_ptr(models[i].material.Ka));
-            glUniform3fv(KdLoc, 1, glm::value_ptr(models[i].material.Kd));
-            glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
-            glUniform1f(NsLoc, models[i].material.Ns);
-        }
+                glUniform3fv(KaLoc, 1, glm::value_ptr(models[i].material.Ka));
+                glUniform3fv(KdLoc, 1, glm::value_ptr(models[i].material.Kd));
+                glUniform3fv(KsLoc, 1, glm::value_ptr(models[i].material.Ks));
+                glUniform1f(NsLoc, models[i].material.Ns);
+            }
 
-        if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere" || models[i].name == "plane" || models[i].name == "basket") {
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
-            glUniform1i(modelStatus, 0);
-            if (isKeyPressed_s('1'))
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            else
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glDrawElements(GL_TRIANGLES, models[i].faces.size() * 3, GL_UNSIGNED_INT, 0);
-        }
+            if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere" || models[i].name == "plane" || models[i].name == "basket") {
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
+                glUniform1i(modelStatus, 0);
+                if (isKeyPressed_s('1'))
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                else
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glDrawElements(GL_TRIANGLES, models[i].faces.size() * 3, GL_UNSIGNED_INT, 0);
+            }
 
-        glBindVertexArray(0);
-
-
-        // '2'키가 눌려 있을 때만 모델의 line을 그리기
-        if (isKeyPressed_s('2') && i < lineVAOs.size()) {
-            glBindVertexArray(lineVAOs[i]);
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // 단위 행렬 적용
-            glUniform1i(modelStatus, 1); // 선 렌더링 모드 활성화
-            glLineWidth(1.5f);
-            glDrawArrays(GL_LINE_STRIP, 0, models[i].lines.size());  // 1차원 벡터로 된 line을 그리기
             glBindVertexArray(0);
         }
 
+        if (models[i].line_status) {
+            // '2'키가 눌려 있을 때만 모델의 line을 그리기
+            if (isKeyPressed_s('2') && i < lineVAOs.size()) {
+                glBindVertexArray(lineVAOs[i]);
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f))); // 단위 행렬 적용
+                glUniform1i(modelStatus, 1); // 선 렌더링 모드 활성화
+                glLineWidth(1.5f);
+                glDrawArrays(GL_LINE_STRIP, 0, models[i].lines.size());  // 1차원 벡터로 된 line을 그리기
+                glBindVertexArray(0);
+            }
+        }
     }
 
   
