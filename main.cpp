@@ -295,6 +295,9 @@ void moveTimer(int value) {
         }
     }
 
+    // 매 프레임마다 물리 시뮬레이션을 업데이트
+    updatePhysics(models, model_basket); // deltaTime을 1/60초로 설정 (60 FPS 기준)
+
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
 }
@@ -424,9 +427,7 @@ GLvoid drawScene() {
     glClearColor(1.0, 1.0, 1.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // 매 프레임마다 물리 시뮬레이션을 업데이트
-    updatePhysics(models,model_basket); // deltaTime을 1/60초로 설정 (60 FPS 기준)
-
+  
     glUseProgram(shaderProgramID);
 
     GLenum error = glGetError();
