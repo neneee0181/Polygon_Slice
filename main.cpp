@@ -9,12 +9,10 @@
 #include <unordered_map>
 #include <random>
 
-#include"include/btBulletCollisionCommon.h"
-#include"include/btBulletDynamicsCommon.h"
-
 #include "LoadObj.h"
 #include "shaderMaker.h"
 #include "LineMaker.h"
+#include "BulletPhysics.h"
 
 using namespace std; 
 
@@ -364,6 +362,10 @@ int main(int argc, char** argv) {
             model.material.hasTexture = false;
         }
     }
+    // Bullet Physics √ ±‚»≠
+    initPhysics();
+    initializeModelsWithPhysics(models);
+
 
     InitBuffer();
 

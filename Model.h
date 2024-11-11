@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include"include/btBulletCollisionCommon.h"
 
 struct Vertex {
     float x, y, z;
@@ -58,4 +59,7 @@ struct Model {
     GLuint textureID;  // 텍스처 ID 필드 추가
 
     bool status = true;
+
+    // Bullet Physics를 위한 멤버 추가
+    btRigidBody* rigidBody = nullptr;  // 각 모델에 대한 RigidBody 포인터 추가
 };
