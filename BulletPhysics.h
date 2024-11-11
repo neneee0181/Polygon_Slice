@@ -58,8 +58,26 @@ void addModelToPhysicsWorld(Model& model) {
     // 모델의 크기를 계산
     glm::vec3 size = calculateModelSize(model);
 
-    // Bullet Physics에서는 반지름을 사용하므로, 크기의 절반을 사용
-    btCollisionShape* shape = new btBoxShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
+    btCollisionShape* shape = nullptr;
+
+    // 모델의 이름에 따라 충돌 경계 설정
+    if (model.name == "box") {
+        // Box 형태의 충돌 경계 생성
+        shape = new btBoxShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
+    }
+    else if (model.name == "sphere") {
+        // Sphere 형태의 충돌 경계 생성 (구의 반지름을 x, y, z 중 최소값의 절반으로 설정)
+        float radius = std::min({ size.x, size.y, size.z }) * 0.5f;
+        shape = new btSphereShape(radius);
+    }
+    else if (model.name == "cylinder") {
+        // Cylinder 형태의 충돌 경계 생성 (x와 z의 평균값을 반지름으로, y를 높이로 사용)
+        shape = new btCylinderShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
+    }
+    else {
+        // 기본값으로 Box 형태 사용 (예외 처리를 위해)
+        shape = new btBoxShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
+    }
 
     btTransform startTransform;
     startTransform.setIdentity();
@@ -81,6 +99,7 @@ void addModelToPhysicsWorld(Model& model) {
     model.rigidBody = body;
 }
 
+
 // 모든 모델에 대한 물리 세계 충돌 객체 초기화
 void initializeModelsWithPhysics(std::vector<Model>& models) {
     for (auto& model : models) {
@@ -91,22 +110,20 @@ void initializeModelsWithPhysics(std::vector<Model>& models) {
 void updatePhysics(std::vector<Model>& models, Model& model_basket) {
     CustomContactResultCallback resultCallback;
 
-    // 각 모델에 대해 애니메이션된 위치로 Bullet Physics 위치 동기화
+    // 각 모델에 대해 애니메이션된 위치와 회전 상태를 Bullet Physics에 동기화
     for (auto& model : models) {
         if (model.rigidBody) {
             btTransform transform;
-            transform.setIdentity();
-            transform.setOrigin(btVector3(model.modelMatrix[3].x, model.modelMatrix[3].y, model.modelMatrix[3].z));
+            transform.setFromOpenGLMatrix(glm::value_ptr(model.modelMatrix)); // modelMatrix에 회전 포함
             model.rigidBody->setWorldTransform(transform);
             model.rigidBody->getMotionState()->setWorldTransform(transform);
         }
     }
 
-    // 바구니 모델 위치 동기화
+    // 바구니 모델 위치 및 회전 동기화
     if (model_basket.rigidBody) {
         btTransform basketTransform;
-        basketTransform.setIdentity();
-        basketTransform.setOrigin(btVector3(model_basket.modelMatrix[3].x, model_basket.modelMatrix[3].y, model_basket.modelMatrix[3].z));
+        basketTransform.setFromOpenGLMatrix(glm::value_ptr(model_basket.modelMatrix)); // modelMatrix에 회전 포함
         model_basket.rigidBody->setWorldTransform(basketTransform);
         model_basket.rigidBody->getMotionState()->setWorldTransform(basketTransform);
     }
@@ -118,14 +135,14 @@ void updatePhysics(std::vector<Model>& models, Model& model_basket) {
         }
     }
 
-    // 모델들끼리의 충돌 검사
-    //for (size_t i = 0; i < models.size(); ++i) {
-    //    for (size_t j = i + 1; j < models.size(); ++j) {  // (i+1)부터 시작하여 중복 검사 방지
-    //        if (models[i].rigidBody && models[j].rigidBody) {
-    //            dynamicsWorld->contactPairTest(models[i].rigidBody, models[j].rigidBody, resultCallback);
-    //        }
-    //    }
-    //}
+    // 모델들끼리의 충돌 검사 (선택적으로 사용 가능)
+    // for (size_t i = 0; i < models.size(); ++i) {
+    //     for (size_t j = i + 1; j < models.size(); ++j) {  
+    //         if (models[i].rigidBody && models[j].rigidBody) {
+    //             dynamicsWorld->contactPairTest(models[i].rigidBody, models[j].rigidBody, resultCallback);
+    //         }
+    //     }
+    // }
 }
 
 void cleanupPhysics() {
