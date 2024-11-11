@@ -9,6 +9,9 @@
 #include <unordered_map>
 #include <random>
 
+#include"include/btBulletCollisionCommon.h"
+#include"include/btBulletDynamicsCommon.h"
+
 #include "LoadObj.h"
 #include "shaderMaker.h"
 #include "LineMaker.h"
