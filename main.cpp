@@ -185,7 +185,7 @@ glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int
     float t = (targetDepth - worldPos_near.z) / direction.z;
     glm::vec3 targetPosition = worldPos_near + t * direction;
 
-    //std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
+    std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
     return targetPosition;
 }
 
@@ -248,7 +248,7 @@ void mouseDragEnd(int x, int y) {
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
                 cout << "모델이 절단 평면과 충돌했습니다!" << endl;
-                handleModelSlice(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer);
+                handleModelSlice(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
             }
         }
     }
@@ -306,7 +306,7 @@ void startTimer(int value) {
         case 3:
             model = model_plane;
             model.lr = lr;
-            model.r_r = dis_model(gen);
+            model.r_r = 0;
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
             model.modelMatrix = matrix * model.modelMatrix;
             break;
