@@ -46,7 +46,7 @@ glm::mat4 view = glm::mat4(1.0f);
 glm::vec3 p_r = glm::vec3(200.0, 150.0, -250.0);
 glm::vec3 p_l = glm::vec3(-200.0, 150.0, -250.0);
 
-Model model_box, model_sphere, model_cylinder, model_plane, model_basket;
+Model model_box, model_sphere, model_cylinder, model_plane, model_teapot ,model_basket;
 
 std::unordered_map<char, bool> keyState;
 
@@ -270,7 +270,7 @@ void mouse(int button, int state, int x, int y) {
 random_device rd;
 mt19937 gen(rd());
 uniform_int_distribution<> dis_model(0, 2);
-uniform_int_distribution<> dis_model2(0, 3);
+uniform_int_distribution<> dis_model2(0, 4);
 uniform_int_distribution<> dis_rl(0, 1);
 
 void startTimer(int value) {
@@ -308,6 +308,13 @@ void startTimer(int value) {
             model = model_plane;
             model.lr = lr;
             model.r_r = 0;
+            matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
+            model.modelMatrix = matrix * model.modelMatrix;
+            break;
+        case 4:
+            model = model_teapot;
+            model.lr = lr;
+            model.r_r = dis_model(gen);
             matrix = glm::translate(matrix, lr == 1 ? p_l : p_r);
             model.modelMatrix = matrix * model.modelMatrix;
             break;
@@ -472,6 +479,7 @@ int main(int argc, char** argv) {
     read_obj_file("obj/sphere.obj", model_sphere, "sphere");
     read_obj_file("obj/Cylinder.obj", model_cylinder, "cylinder");
     read_obj_file("obj/plane.obj", model_plane, "plane");
+    read_obj_file("obj/teapot.obj", model_teapot, "teapot");
     read_obj_file("obj/basket.obj", model_basket, "basket");
 
     // basket setting
@@ -612,7 +620,7 @@ GLvoid drawScene() {
                 glUniform1f(NsLoc, models[i].material.Ns);
             }
 
-            if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere" || models[i].name == "plane" || models[i].name == "basket") {
+            if (models[i].name == "box" || models[i].name == "cylinder" || models[i].name == "sphere" || models[i].name == "plane" || models[i].name == "basket" || models[i].name == "teapot") {
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(models[i].modelMatrix));
                 glUniform1i(modelStatus, 0);
                 if (isKeyPressed_s('1'))

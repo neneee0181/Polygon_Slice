@@ -41,6 +41,11 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
         read_obj_file("obj/plane3.obj", bottomPart, "plane");
     }
 
+    else if (originalModel.name == "teapot") {
+        read_obj_file("obj/teapot2.obj", topPart, "teapot");
+        read_obj_file("obj/teapot3.obj", bottomPart, "teapot");
+    }
+
 
 
     // 원래 모델을 장면에서 제거
