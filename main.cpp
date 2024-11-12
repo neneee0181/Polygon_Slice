@@ -229,13 +229,12 @@ void mouseDragEnd(int x, int y) {
     
     // Update the rectangle VBO with new vertices
     updateRectangleBuffer();
-
-    // 커스텀 콜백 객체 생성
-    CustomContactResultCallback resultCallback;
+   
     // 각 모델에 대해 드래그 평면과의 충돌 체크
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].rigidBody && dragPlaneObject) {
-          
+            // 커스텀 콜백 객체 생성
+            CustomContactResultCallback resultCallback;
             // 콜백을 사용하기 전에 항상 reset() 호출
             resultCallback.reset();
 
