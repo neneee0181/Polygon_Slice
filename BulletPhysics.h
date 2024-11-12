@@ -238,3 +238,27 @@ void removeRigidBodyFromModel(Model& model) {
         model.rigidBody = nullptr;
     }
 }
+
+btCollisionObject* dragPlaneObject = nullptr;
+
+// 드래그 평면 생성
+void createDragPlane(const glm::vec3& pointA, const glm::vec3& pointB, const glm::vec3& pointC, const glm::vec3& pointD) {
+    if (dragPlaneObject) {
+        // 기존 평면 삭제
+        dynamicsWorld->removeCollisionObject(dragPlaneObject);
+        delete dragPlaneObject;
+    }
+
+    // 네 개의 점을 이용해 평면 정의
+    glm::vec3 normal = glm::normalize(glm::cross(pointB - pointA, pointD - pointA));
+    btVector3 planeOrigin(pointA.x, pointA.y, pointA.z);
+    btVector3 planeNormal(normal.x, normal.y, normal.z);
+
+    // Bullet의 평면 충돌체 생성
+    btStaticPlaneShape* planeShape = new btStaticPlaneShape(planeNormal, planeOrigin.dot(planeNormal));
+    dragPlaneObject = new btCollisionObject();
+    dragPlaneObject->setCollisionShape(planeShape);
+    dragPlaneObject->setUserPointer((void*)"dragPlane");
+
+    dynamicsWorld->addCollisionObject(dragPlaneObject);
+}

@@ -149,6 +149,7 @@
     <ClInclude Include="LoadTexture.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="shaderMaker.h" />
+    <ClInclude Include="Slide.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="filetobuf.cpp" />

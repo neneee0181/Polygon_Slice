@@ -13,6 +13,7 @@
 #include "shaderMaker.h"
 #include "LineMaker.h"
 #include "BulletPhysics.h"
+#include "Slide.h"
 
 using namespace std; 
 
@@ -212,6 +213,28 @@ void updateRectangleBuffer() {
     glBindVertexArray(0);
 }
 
+bool checkCollision(btRigidBody* bodyA, btCollisionObject* bodyB) {
+    // 유효성 검사
+    if (!dynamicsWorld || !bodyA || !bodyB) {
+        std::cerr << "Error: Invalid dynamicsWorld or collision bodies." << std::endl;
+        return false;
+    }
+
+    // 새로운 ContactCallback 인스턴스 생성하여 초기화
+    struct ContactCallback : public btCollisionWorld::ContactResultCallback {
+        bool collided = false;
+        btScalar addSingleResult(btManifoldPoint&, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int) override {
+            collided = true;
+            return 0;
+        }
+    };
+
+    ContactCallback callback;
+    dynamicsWorld->contactPairTest(bodyA, bodyB, callback);
+
+    return callback.collided;
+}
+
 void mouseDragEnd(int x, int y) {
     isDragging = false;
     // 드래그 종료 위치를 월드 좌표계로 변환
@@ -222,8 +245,25 @@ void mouseDragEnd(int x, int y) {
     dragSqu[2] = dragSqu[1];
     dragSqu[2].z = -100;
 
+    // 드래그 평면을 Bullet에 생성
+    createDragPlane(dragSqu[0], dragSqu[1], dragSqu[2], dragSqu[3]);
+    
     // Update the rectangle VBO with new vertices
     updateRectangleBuffer();
+
+    for (int i = 0; i < models.size(); ++i) {
+
+        // Bullet에서 모델과 드래그 평면의 충돌 체크
+        if (dragPlaneObject && checkCollision(models[i].rigidBody, dragPlaneObject)) {
+            cout << "충돌!!" << endl;
+            glm::vec3 slideDirection = glm::normalize(glm::vec3(dragSqu[1].x - dragSqu[0].x, dragSqu[1].y - dragSqu[0].y, 0.0f));
+            float slideSpeed = 1.0f; // 원하는 슬라이드 속도
+
+            // 슬라이드 이동 적용
+            models[i].modelMatrix = glm::translate(models[i].modelMatrix, slideDirection * slideSpeed);
+            addModelToPhysicsWorld(models[i]); // 물리 엔진에 위치 갱신
+        }
+    }
 }
 
 void mouse(int button, int state, int x, int y) {
