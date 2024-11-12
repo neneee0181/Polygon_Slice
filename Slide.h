@@ -3,42 +3,80 @@
 #include "Model.h"
 #include <gl/glm/glm/glm.hpp>
 
-void handleModelSlice(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models, 
-    void (*addModelToPhysicsWorld)(Model& model), void (*AddModelBuffer)(const Model& model), void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete),void(*InitBuffer)(), glm::vec3 dragSqu[4]) {
-    Model topPart, bottomPart;
+void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
+    void (*addModelToPhysicsWorld)(Model& model), void (*AddModelBuffer)(const Model& model), void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete), void(*InitBuffer)(), glm::vec3 dragSqu[4]) {
 
-    for (const Face& face : originalModel.faces) {
-        // 각 face의 세 꼭짓점 가져오기
-        Vertex v0 = originalModel.vertices[face.v1];
-        Vertex v1 = originalModel.vertices[face.v2];
-        Vertex v2 = originalModel.vertices[face.v3];
+    Model topPart = originalModel, bottomPart = originalModel;
+    topPart.vertices.clear();
+    topPart.faces.clear();
+    topPart.rigidBody = nullptr;
+    bottomPart.vertices.clear();
+    bottomPart.faces.clear();
+    bottomPart.rigidBody = nullptr;
 
-        // dragSqu[0]과 dragSqu[2]를 이용해 x, y 범위 계산
-        float minX = std::min(dragSqu[0].x, dragSqu[2].x);
-        float maxX = std::max(dragSqu[0].x, dragSqu[2].x);
-        float minY = std::min(dragSqu[0].y, dragSqu[2].y);
-        float maxY = std::max(dragSqu[0].y, dragSqu[2].y);
+    // 모델 중심 좌표 계산
+    glm::vec3 modelCenter(0.0f);
+    for (const auto& vertex : originalModel.vertices) {
+        modelCenter += glm::vec3(vertex.x, vertex.y, vertex.z);
+    }
+    modelCenter /= originalModel.vertices.size();
 
-        // 각 꼭짓점이 드래그된 사각형 내에 있는지 여부 확인
-        bool v0_in = (v0.x >= minX && v0.x <= maxX && v0.y >= minY && v0.y <= maxY);
-        bool v1_in = (v1.x >= minX && v1.x <= maxX && v1.y >= minY && v1.y <= maxY);
-        bool v2_in = (v2.x >= minX && v2.x <= maxX && v2.y >= minY && v2.y <= maxY);
-
-        if (v0_in && v1_in && v2_in) {
-            // 모든 꼭짓점이 사각형 내부에 있는 경우 topPart로 분류
-            topPart.faces.push_back(face);
-            topPart.vertices.push_back(v0);
-            topPart.vertices.push_back(v1);
-            topPart.vertices.push_back(v2);
+    // 모델을 중심을 기준으로 분리할 버텍스 인덱스를 저장
+    std::unordered_map<int, int> topVertexMap, bottomVertexMap;
+    for (int i = 0; i < originalModel.vertices.size(); ++i) {
+        const auto& vertex = originalModel.vertices[i];
+        if (vertex.y > modelCenter.y) {
+            topVertexMap[i] = topPart.vertices.size();
+            topPart.vertices.push_back(vertex);
         }
         else {
-            // 모든 꼭짓점이 사각형 밖에 있는 경우 bottomPart로 분류
-            bottomPart.faces.push_back(face);
-            bottomPart.vertices.push_back(v0);
-            bottomPart.vertices.push_back(v1);
-            bottomPart.vertices.push_back(v2);
+            bottomVertexMap[i] = bottomPart.vertices.size();
+            bottomPart.vertices.push_back(vertex);
         }
     }
+
+    // faces를 기준으로 각 파트의 인덱스 리스트를 생성
+    for (const auto& face : originalModel.faces) {
+        bool inTop = topVertexMap.count(face.v1) && topVertexMap.count(face.v2) && topVertexMap.count(face.v3);
+        bool inBottom = bottomVertexMap.count(face.v1) && bottomVertexMap.count(face.v2) && bottomVertexMap.count(face.v3);
+
+        if (inTop) {
+            Face newFace = { topVertexMap[face.v1], topVertexMap[face.v2], topVertexMap[face.v3] };
+            topPart.faces.push_back(newFace);
+        }
+        else if (inBottom) {
+            Face newFace = { bottomVertexMap[face.v1], bottomVertexMap[face.v2], bottomVertexMap[face.v3] };
+            bottomPart.faces.push_back(newFace);
+        }
+    }
+
+    // 원래 모델을 장면에서 제거
+    removeModelFromWorld(models, originalModel);
+    InitBuffer();
+
+    // 분할된 두 모델을 추가
+    models.push_back(topPart);
+    AddModelBuffer(topPart);
+    addModelToPhysicsWorld(topPart);
+
+    models.push_back(bottomPart);
+    AddModelBuffer(bottomPart);
+    addModelToPhysicsWorld(bottomPart);
+}
+
+void handleModelSlice2(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
+    void (*addModelToPhysicsWorld)(Model& model), void (*AddModelBuffer)(const Model& model), void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete), void(*InitBuffer)(), glm::vec3 dragSqu[4]) {
+
+    Model topPart = originalModel, bottomPart = originalModel;
+    topPart.vertices.clear();
+    topPart.faces.clear();
+    topPart.rigidBody = nullptr;
+    bottomPart.vertices.clear();
+    bottomPart.faces.clear();
+    bottomPart.rigidBody = nullptr;
+
+   
+   
 
     // 원래 모델을 장면에서 제거
     removeModelFromWorld(models, originalModel);
