@@ -51,6 +51,11 @@ std::unordered_map<char, bool> keyState;
 int model_speed = 120; // 모델 생성 시간
 float moveSpeed = 0.25f; // 보간 속도 조절 (모델 속도)
 
+// 마우스 드래그 상태 추적
+bool isDragging = false;
+glm::vec3 dragStartWorld;
+glm::vec3 dragEndWorld;
+
 void keyDown_s(const char& key) {
     keyState[key] = true;
 }
@@ -73,7 +78,7 @@ void CleanupPhysics() {
     cleanupPhysics(); // Bullet 메모리 해제
 }
 
-void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
     glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
 
     // OpenGL 좌표계와 맞추기 위해 y 좌표 뒤집기
@@ -84,8 +89,8 @@ void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int scre
     glm::vec3 worldPos_near = glm::unProject(winCoords_near, view * model, projection, viewport);
     glm::vec3 worldPos_far = glm::unProject(winCoords_far, view * model, projection, viewport);
 
-    std::cout << "Near Plane 3D Position: (" << worldPos_near.x << ", " << worldPos_near.y << ", " << worldPos_near.z << ")" << std::endl;
-    std::cout << "Far Plane 3D Position: (" << worldPos_far.x << ", " << worldPos_far.y << ", " << worldPos_far.z << ")" << std::endl;
+    //std::cout << "Near Plane 3D Position: (" << worldPos_near.x << ", " << worldPos_near.y << ", " << worldPos_near.z << ")" << std::endl;
+    //std::cout << "Far Plane 3D Position: (" << worldPos_far.x << ", " << worldPos_far.y << ", " << worldPos_far.z << ")" << std::endl;
 
     // Near와 Far 사이의 방향 벡터 계산 (정규화된 방향 벡터)
     glm::vec3 direction = glm::normalize(worldPos_far - worldPos_near);
@@ -96,6 +101,7 @@ void get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int scre
     glm::vec3 targetPosition = worldPos_near + t * direction;
 
     std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
+    return targetPosition;
 }
 
 GLvoid Reshape(int w, int h) {
@@ -180,10 +186,33 @@ void keySpecial(int key, int x, int y) {
     glutPostRedisplay();
 }
 
+
+void mouseDragStart(int x, int y) {
+    isDragging = true;
+    // 마우스 클릭 위치를 월드 좌표계로 변환 (Near, Far 클립 평면의 교차점 사용)
+    dragStartWorld = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+
+}
+
+
+void mouseDragEnd(int x, int y) {
+    isDragging = false;
+    // 드래그 종료 위치를 월드 좌표계로 변환
+    dragEndWorld = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+
+
+    // 드래그 벡터로부터 슬라이스 평면을 생성
+    //createSlicePlane(dragStartWorld, dragEndWorld);
+}
+
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+        mouseDragStart(x,y);
     }
+    else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+        mouseDragEnd(x, y);
+    }
+    
         //std::cout << "x = " << x << " y = " << y << std::endl;
     glutPostRedisplay();
 } 
@@ -196,7 +225,7 @@ uniform_int_distribution<> dis_rl(0, 1);
 
 void startTimer(int value) {
     
-    cout << value << endl;
+    //cout << value << endl;
     
     if (value % model_speed == 0) {
         int lr = dis_rl(gen);
