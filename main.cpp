@@ -241,7 +241,6 @@ void mouseDragEnd(int x, int y) {
 
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
-
                 // 슬라이드 이동 방향 및 속도 설정
                 glm::vec3 slideDirection = glm::normalize(glm::vec3(dragSqu[1].x - dragSqu[0].x, dragSqu[1].y - dragSqu[0].y, 0.0f));
                 float slideSpeed = 1.0f; // 원하는 슬라이드 속도
