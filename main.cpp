@@ -179,7 +179,7 @@ glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int
     glm::vec3 direction = glm::normalize(worldPos_far - worldPos_near);
 
     // 예시: 특정 깊이에서의 위치를 계산 (이 경우, z = -100 위치에서의 점을 찾기)
-    float targetDepth = -100.0f;
+    float targetDepth = -20.0f;
     float t = (targetDepth - worldPos_near.z) / direction.z;
     glm::vec3 targetPosition = worldPos_near + t * direction;
 
@@ -191,10 +191,6 @@ void mouseDragStart(int x, int y) {
     isDragging = true;
     // 마우스 클릭 위치를 월드 좌표계로 변환 (Near, Far 클립 평면의 교차점 사용)
     dragSqu[0] = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
-    
-    dragSqu[2].x = dragSqu[0].x;
-    dragSqu[2].y = dragSqu[0].y;
-    dragSqu[2].z = -200;
 }
 
 void updateRectangleBuffer() {
@@ -221,9 +217,10 @@ void mouseDragEnd(int x, int y) {
     // 드래그 종료 위치를 월드 좌표계로 변환
     dragSqu[1] = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
 
-    dragSqu[3].x = dragSqu[1].x;
-    dragSqu[3].y = dragSqu[1].y;
-    dragSqu[3].z = -200;
+    dragSqu[3] = dragSqu[0];
+    dragSqu[3].z = -100;
+    dragSqu[2] = dragSqu[1];
+    dragSqu[2].z = -100;
 
     // Update the rectangle VBO with new vertices
     updateRectangleBuffer();
@@ -551,10 +548,12 @@ GLvoid drawScene() {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
         glLineWidth(2.0f);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        // Render the rectangle as a line loop
-        glDrawArrays(GL_LINE_LOOP, 0, 4);
+        if (isKeyPressed_s('1'))
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+        else
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         glBindVertexArray(0);
     }
