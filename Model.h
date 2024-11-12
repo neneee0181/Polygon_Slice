@@ -9,6 +9,10 @@
 
 struct Vertex {
     float x, y, z;
+    Vertex() = default;
+    Vertex(float x, float y, float z) : x(x), y(y), z(z) {}
+
+    glm::vec3 toVec3() const { return glm::vec3(x, y, z); }
 };
 
 struct TextureCoord {

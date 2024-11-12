@@ -244,6 +244,13 @@ void mouseDragEnd(int x, int y) {
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
                 cout << "충돌되었습니다." << endl;
+
+                if (models[i].name == "box") {
+                }
+                else if (models[i].name == "sphere") {
+                }
+                else if (models[i].name == "cylinder") {
+                }
             }
         }
     }
