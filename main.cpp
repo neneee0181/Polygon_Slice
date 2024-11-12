@@ -53,8 +53,9 @@ float moveSpeed = 0.25f; // 보간 속도 조절 (모델 속도)
 
 // 마우스 드래그 상태 추적
 bool isDragging = false;
-glm::vec3 dragStartWorld;
-glm::vec3 dragEndWorld;
+glm::vec3 dragSqu[4];
+GLuint drgSquVAO = 0;
+GLuint drgSquVBO = 0;
 
 void keyDown_s(const char& key) {
     keyState[key] = true;
@@ -76,32 +77,6 @@ void InitPhysics() {
 
 void CleanupPhysics() {
     cleanupPhysics(); // Bullet 메모리 해제
-}
-
-glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
-    glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
-
-    // OpenGL 좌표계와 맞추기 위해 y 좌표 뒤집기
-    glm::vec3 winCoords_near = glm::vec3(mouseX, screenHeight - mouseY, 0.0f); // Near plane (z = 0.0)
-    glm::vec3 winCoords_far = glm::vec3(mouseX, screenHeight - mouseY, 1.0f);  // Far plane (z = 1.0)
-
-    // Near, Far plane의 unproject 결과로 두 개의 world position 얻기
-    glm::vec3 worldPos_near = glm::unProject(winCoords_near, view * model, projection, viewport);
-    glm::vec3 worldPos_far = glm::unProject(winCoords_far, view * model, projection, viewport);
-
-    //std::cout << "Near Plane 3D Position: (" << worldPos_near.x << ", " << worldPos_near.y << ", " << worldPos_near.z << ")" << std::endl;
-    //std::cout << "Far Plane 3D Position: (" << worldPos_far.x << ", " << worldPos_far.y << ", " << worldPos_far.z << ")" << std::endl;
-
-    // Near와 Far 사이의 방향 벡터 계산 (정규화된 방향 벡터)
-    glm::vec3 direction = glm::normalize(worldPos_far - worldPos_near);
-
-    // 예시: 특정 깊이에서의 위치를 계산 (이 경우, z = -100 위치에서의 점을 찾기)
-    float targetDepth = -100.0f;
-    float t = (targetDepth - worldPos_near.z) / direction.z;
-    glm::vec3 targetPosition = worldPos_near + t * direction;
-
-    std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
-    return targetPosition;
 }
 
 GLvoid Reshape(int w, int h) {
@@ -186,23 +161,72 @@ void keySpecial(int key, int x, int y) {
     glutPostRedisplay();
 }
 
+glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int screenHeight, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+    glm::vec4 viewport = glm::vec4(0, 0, screenWidth, screenHeight);
+
+    // OpenGL 좌표계와 맞추기 위해 y 좌표 뒤집기
+    glm::vec3 winCoords_near = glm::vec3(mouseX, screenHeight - mouseY, 0.0f); // Near plane (z = 0.0)
+    glm::vec3 winCoords_far = glm::vec3(mouseX, screenHeight - mouseY, 1.0f);  // Far plane (z = 1.0)
+
+    // Near, Far plane의 unproject 결과로 두 개의 world position 얻기
+    glm::vec3 worldPos_near = glm::unProject(winCoords_near, view * model, projection, viewport);
+    glm::vec3 worldPos_far = glm::unProject(winCoords_far, view * model, projection, viewport);
+
+    //std::cout << "Near Plane 3D Position: (" << worldPos_near.x << ", " << worldPos_near.y << ", " << worldPos_near.z << ")" << std::endl;
+    //std::cout << "Far Plane 3D Position: (" << worldPos_far.x << ", " << worldPos_far.y << ", " << worldPos_far.z << ")" << std::endl;
+
+    // Near와 Far 사이의 방향 벡터 계산 (정규화된 방향 벡터)
+    glm::vec3 direction = glm::normalize(worldPos_far - worldPos_near);
+
+    // 예시: 특정 깊이에서의 위치를 계산 (이 경우, z = -100 위치에서의 점을 찾기)
+    float targetDepth = -100.0f;
+    float t = (targetDepth - worldPos_near.z) / direction.z;
+    glm::vec3 targetPosition = worldPos_near + t * direction;
+
+    std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
+    return targetPosition;
+}
 
 void mouseDragStart(int x, int y) {
     isDragging = true;
     // 마우스 클릭 위치를 월드 좌표계로 변환 (Near, Far 클립 평면의 교차점 사용)
-    dragStartWorld = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
-
+    dragSqu[0] = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+    
+    dragSqu[2].x = dragSqu[0].x;
+    dragSqu[2].y = dragSqu[0].y;
+    dragSqu[2].z = -200;
 }
 
+void updateRectangleBuffer() {
+    if (drgSquVAO == 0) {
+        // Generate VAO and VBO only once
+        glGenVertexArrays(1, &drgSquVAO);
+        glGenBuffers(1, &drgSquVBO);
+    }
+
+    // Bind the VAO and update the VBO with the rectangle's corner vertices
+    glBindVertexArray(drgSquVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, drgSquVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(dragSqu), dragSqu, GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    // Unbind
+    glBindVertexArray(0);
+}
 
 void mouseDragEnd(int x, int y) {
     isDragging = false;
     // 드래그 종료 위치를 월드 좌표계로 변환
-    dragEndWorld = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
+    dragSqu[1] = get3DMousePositionGLM(x, y, width, height, glm::mat4(1.0f), view, projection);
 
+    dragSqu[3].x = dragSqu[1].x;
+    dragSqu[3].y = dragSqu[1].y;
+    dragSqu[3].z = -200;
 
-    // 드래그 벡터로부터 슬라이스 평면을 생성
-    //createSlicePlane(dragStartWorld, dragEndWorld);
+    // Update the rectangle VBO with new vertices
+    updateRectangleBuffer();
 }
 
 void mouse(int button, int state, int x, int y) {
@@ -520,6 +544,20 @@ GLvoid drawScene() {
     GLint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 
     drawBasket(modelLoc, modelStatus);
+
+    // Draw the rectangle if it exists
+    if (!isDragging) {
+        glBindVertexArray(drgSquVAO);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+        glLineWidth(2.0f);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        // Render the rectangle as a line loop
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+        glBindVertexArray(0);
+    }
 
     for (size_t i = 0; i < models.size(); ++i) {
 
