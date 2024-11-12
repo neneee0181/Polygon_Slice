@@ -185,7 +185,7 @@ glm::vec3 get3DMousePositionGLM(float mouseX, float mouseY, int screenWidth, int
     float t = (targetDepth - worldPos_near.z) / direction.z;
     glm::vec3 targetPosition = worldPos_near + t * direction;
 
-    std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
+    //std::cout << "3D Position at depth " << targetDepth << ": (" << targetPosition.x << ", " << targetPosition.y << ", " << targetPosition.z << ")" << std::endl;
     return targetPosition;
 }
 
@@ -225,31 +225,26 @@ void mouseDragEnd(int x, int y) {
     dragSqu[2].z = -100;
 
     // 드래그 평면을 Bullet에 생성
-    createDragPlane(dragSqu[0], dragSqu[1], dragSqu[2], dragSqu[3]);
+    createDragBox(dragSqu[0], dragSqu[1], dragSqu[2], dragSqu[3]);
     
     // Update the rectangle VBO with new vertices
     updateRectangleBuffer();
 
+    // 커스텀 콜백 객체 생성
+    CustomContactResultCallback resultCallback;
     // 각 모델에 대해 드래그 평면과의 충돌 체크
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].rigidBody && dragPlaneObject) {
-            // 커스텀 콜백 객체 생성
-            CustomContactResultCallback resultCallback;
+          
+            // 콜백을 사용하기 전에 항상 reset() 호출
+            resultCallback.reset();
 
-            // 드래그 평면과 모델의 충돌 검사
-            dynamicsWorld->contactTest(models[i].rigidBody, resultCallback);
+            // 두 개의 객체 간 충돌 검사 (models[i].rigidBody와 dragPlaneObject)
+            dynamicsWorld->contactPairTest(models[i].rigidBody, dragPlaneObject, resultCallback);
 
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
-                // 슬라이드 이동 방향 및 속도 설정
-                glm::vec3 slideDirection = glm::normalize(glm::vec3(dragSqu[1].x - dragSqu[0].x, dragSqu[1].y - dragSqu[0].y, 0.0f));
-                float slideSpeed = 1.0f; // 원하는 슬라이드 속도
-
-                // 슬라이드 이동 적용
-                models[i].modelMatrix = glm::translate(models[i].modelMatrix, slideDirection * slideSpeed);
-
-                // 물리 엔진에 모델 위치 갱신
-                addModelToPhysicsWorld(models[i]);
+                cout << "충돌되었습니다." << endl;
             }
         }
     }

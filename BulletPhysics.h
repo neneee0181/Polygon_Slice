@@ -241,24 +241,48 @@ void removeRigidBodyFromModel(Model& model) {
 
 btCollisionObject* dragPlaneObject = nullptr;
 
-// 드래그 평면 생성
-void createDragPlane(const glm::vec3& pointA, const glm::vec3& pointB, const glm::vec3& pointC, const glm::vec3& pointD) {
+//// 드래그 평면 생성
+//void createDragPlane(const glm::vec3& pointA, const glm::vec3& pointB, const glm::vec3& pointC, const glm::vec3& pointD) {
+//    if (dragPlaneObject) {
+//        // 기존 평면 삭제
+//        dynamicsWorld->removeCollisionObject(dragPlaneObject);
+//        delete dragPlaneObject;
+//    }
+//
+//    // 네 개의 점을 이용해 평면 정의
+//    glm::vec3 normal = glm::normalize(glm::cross(pointB - pointA, pointD - pointA));
+//    btVector3 planeOrigin(pointA.x, pointA.y, pointA.z);
+//    btVector3 planeNormal(normal.x, normal.y, normal.z);
+//
+//    // Bullet의 평면 충돌체 생성
+//    btStaticPlaneShape* planeShape = new btStaticPlaneShape(planeNormal, planeOrigin.dot(planeNormal));
+//    dragPlaneObject = new btCollisionObject();
+//    dragPlaneObject->setCollisionShape(planeShape);
+//    dragPlaneObject->setUserPointer((void*)"dragPlane");
+//
+//    dynamicsWorld->addCollisionObject(dragPlaneObject);
+//}
+
+void createDragBox(const glm::vec3& pointA, const glm::vec3& pointB, const glm::vec3& pointC, const glm::vec3& pointD) {
     if (dragPlaneObject) {
         // 기존 평면 삭제
         dynamicsWorld->removeCollisionObject(dragPlaneObject);
         delete dragPlaneObject;
     }
 
-    // 네 개의 점을 이용해 평면 정의
-    glm::vec3 normal = glm::normalize(glm::cross(pointB - pointA, pointD - pointA));
-    btVector3 planeOrigin(pointA.x, pointA.y, pointA.z);
-    btVector3 planeNormal(normal.x, normal.y, normal.z);
+    // 사각형 중심 계산
+    glm::vec3 center = (pointA + pointB + pointC + pointD) / 4.0f;
+    glm::vec3 halfExtents = glm::vec3(glm::distance(pointA, pointB) / 2.0f, 0.1f, glm::distance(pointA, pointD) / 2.0f);
 
-    // Bullet의 평면 충돌체 생성
-    btStaticPlaneShape* planeShape = new btStaticPlaneShape(planeNormal, planeOrigin.dot(planeNormal));
+    btBoxShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
     dragPlaneObject = new btCollisionObject();
-    dragPlaneObject->setCollisionShape(planeShape);
-    dragPlaneObject->setUserPointer((void*)"dragPlane");
+    dragPlaneObject->setCollisionShape(boxShape);
+
+    // 위치 지정
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin(btVector3(center.x, center.y, center.z));
+    dragPlaneObject->setWorldTransform(transform);
 
     dynamicsWorld->addCollisionObject(dragPlaneObject);
 }
