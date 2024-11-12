@@ -16,7 +16,7 @@
 #include "Slide.h"
 #include "CustomContactResultCallback.h"
 
-using namespace std; 
+using namespace std;
 
 void InitBuffer();
 GLvoid drawScene(GLvoid);
@@ -85,7 +85,7 @@ GLvoid Reshape(int w, int h) {
     glViewport(0, 0, w, h);
     width = w;
     height = h;
-}     
+}
 
 void keyUp(unsigned char key, int x, int y) {
     keyUp_s(key);
@@ -226,10 +226,14 @@ void mouseDragEnd(int x, int y) {
 
     // 드래그 평면을 Bullet에 생성
     createDragBox(dragSqu[0], dragSqu[1], dragSqu[2], dragSqu[3]);
-    
+
     // Update the rectangle VBO with new vertices
     updateRectangleBuffer();
-   
+
+    // 드래그 사각형의 네 점으로부터 평면 정의
+    glm::vec3 planeNormal = glm::normalize(glm::cross(dragSqu[1] - dragSqu[0], dragSqu[3] - dragSqu[0]));
+    float planeOffset = glm::dot(planeNormal, dragSqu[0]);
+
     // 각 모델에 대해 드래그 평면과의 충돌 체크
     for (int i = 0; i < models.size(); ++i) {
         if (models[i].rigidBody && dragPlaneObject) {
@@ -243,14 +247,8 @@ void mouseDragEnd(int x, int y) {
 
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
-                cout << "충돌되었습니다." << endl;
-
-                if (models[i].name == "box") {
-                }
-                else if (models[i].name == "sphere") {
-                }
-                else if (models[i].name == "cylinder") {
-                }
+                cout << "모델이 절단 평면과 충돌했습니다!" << endl;
+                handleModelSlice(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer);
             }
         }
     }
@@ -258,15 +256,15 @@ void mouseDragEnd(int x, int y) {
 
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        mouseDragStart(x,y);
+        mouseDragStart(x, y);
     }
     else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
         mouseDragEnd(x, y);
     }
-    
-        //std::cout << "x = " << x << " y = " << y << std::endl;
+
+    //std::cout << "x = " << x << " y = " << y << std::endl;
     glutPostRedisplay();
-} 
+}
 
 random_device rd;
 mt19937 gen(rd());
@@ -275,9 +273,9 @@ uniform_int_distribution<> dis_model2(0, 3);
 uniform_int_distribution<> dis_rl(0, 1);
 
 void startTimer(int value) {
-    
+
     //cout << value << endl;
-    
+
     if (value % model_speed == 0) {
         int lr = dis_rl(gen);
         Model model;
@@ -355,7 +353,7 @@ glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, cons
 
 void moveTimer(int value) {
     for (int i = 0; i < models.size(); ++i) {
-        
+
         if (!models[i].line_status && models[i].model_status)
             continue;
 
@@ -538,7 +536,7 @@ GLvoid drawScene() {
     glClearColor(1.0, 1.0, 1.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  
+
     glUseProgram(shaderProgramID);
 
     GLenum error = glGetError();
@@ -639,7 +637,7 @@ GLvoid drawScene() {
         }
     }
 
-  
+
     glDisable(GL_DEPTH_TEST);
     glutSwapBuffers();
     GLenum err;
