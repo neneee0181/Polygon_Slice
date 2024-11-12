@@ -50,6 +50,7 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
         }
     }
 
+
     // 원래 모델을 장면에서 제거
     removeModelFromWorld(models, originalModel);
     InitBuffer();
@@ -63,31 +64,4 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     addModelToPhysicsWorld(bottomPart);
     models.push_back(bottomPart);
     AddModelBuffer(bottomPart);
-}
-
-void handleModelSlice2(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
-    void (*addModelToPhysicsWorld)(Model& model), void (*AddModelBuffer)(const Model& model), void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete), void(*InitBuffer)(), glm::vec3 dragSqu[4]) {
-
-    Model topPart = originalModel, bottomPart = originalModel;
-    topPart.vertices.clear();
-    topPart.faces.clear();
-    topPart.rigidBody = nullptr;
-    bottomPart.vertices.clear();
-    bottomPart.faces.clear();
-    bottomPart.rigidBody = nullptr;
-
-   
-   
-
-    // 원래 모델을 장면에서 제거
-    removeModelFromWorld(models, originalModel);
-    InitBuffer();
-
-    // 새로운 두 모델을 추가하고 OpenGL 버퍼 초기화
-    models.push_back(topPart);
-    AddModelBuffer(topPart);
-
-    models.push_back(bottomPart);
-    AddModelBuffer(bottomPart);
-
 }

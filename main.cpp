@@ -249,7 +249,6 @@ void mouseDragEnd(int x, int y) {
             if (resultCallback.hitDetected) {
                 cout << "모델이 절단 평면과 충돌했습니다!" << endl;
                 handleModelSlice1(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
-                //handleModelSlice2(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
                 return;
             }
         }
