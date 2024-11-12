@@ -55,13 +55,14 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     InitBuffer();
 
     // 분할된 두 모델을 추가
+
+    addModelToPhysicsWorld(topPart);
     models.push_back(topPart);
     AddModelBuffer(topPart);
-    addModelToPhysicsWorld(topPart);
 
+    addModelToPhysicsWorld(bottomPart);
     models.push_back(bottomPart);
     AddModelBuffer(bottomPart);
-    addModelToPhysicsWorld(bottomPart);
 }
 
 void handleModelSlice2(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
