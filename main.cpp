@@ -527,7 +527,7 @@ int main(int argc, char** argv) {
 
     // basket setting
     glm::mat4 basket_t_matrix = glm::mat4(1.0f);
-    basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(0.0, -80.0, -30.0));
+    basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(0.0, -80.0, -60.0));
 
     glm::mat4 basket_s_matrix = glm::mat4(1.0f);
     basket_s_matrix = glm::scale(basket_s_matrix, glm::vec3(1.3, 1.3, 1.3));
