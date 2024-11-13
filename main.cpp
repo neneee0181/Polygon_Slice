@@ -27,7 +27,8 @@ void moveTimer(int value);
 void moveBasket(int value);
 
 void AddModelBuffer(const Model& model);
-void InitLineBuffer(const Model& model);
+void InitLineAddBuffer(const Model& model);
+void InitLineBuffer(const std::vector<Model>& models);
 
 vector<Model> models;
 vector<GLuint> vaos;
@@ -248,8 +249,8 @@ void mouseDragEnd(int x, int y) {
             // 충돌이 감지되었다면 처리
             if (resultCallback.hitDetected) {
                 cout << "모델이 절단 평면과 충돌했습니다!" << endl;
-                //handleModelSlice1(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
-                handleModelSlice2(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
+                handleModelSlice1(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, InitLineBuffer, dragSqu);
+                //handleModelSlice2(models[i], planeNormal, planeOffset, models, addModelToPhysicsWorld, AddModelBuffer, removeModelFromWorld, InitBuffer, dragSqu);
 
                 return;
             }
@@ -329,7 +330,7 @@ void startTimer(int value) {
         addModelToPhysicsWorld(model);
 
         make_line_left(model.lr == 1 ? p_l : p_r, model.lines);
-        InitLineBuffer(model);
+        InitLineAddBuffer(model);
         models.push_back(model);
         AddModelBuffer(model);  // 새 모델에 대해 VAO와 VBO 추가
     }
@@ -790,7 +791,7 @@ void AddModelBuffer(const Model& model) {
     glBindVertexArray(0); // VAO unbind
 }
 
-void InitLineBuffer(const Model& model) {
+void InitLineAddBuffer(const Model& model) {
     GLuint vao;
     GLuint vbo;
 
@@ -812,4 +813,43 @@ void InitLineBuffer(const Model& model) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+}
+
+void InitLineBuffer(const std::vector<Model>& models) {
+    // 기존 lineVAOs와 lineVBOs를 초기화하여 중복 방지
+    for (auto& vao : lineVAOs) {
+        glDeleteVertexArrays(1, &vao);
+    }
+    for (auto& vbo : lineVBOs) {
+        glDeleteBuffers(1, &vbo);
+    }
+
+    lineVAOs.clear();
+    lineVBOs.clear();
+
+    // 모든 모델의 lines에 대해 VAO와 VBO 생성
+    for (const auto& model : models) {
+        if (model.lines.empty()) continue; // 모델에 lines 데이터가 없으면 건너뜁니다.
+
+        GLuint vao, vbo;
+
+        // VAO와 VBO 생성 및 바인딩
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, model.lines.size() * sizeof(glm::vec3), model.lines.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        // VAO와 VBO를 저장
+        lineVAOs.push_back(vao);
+        lineVBOs.push_back(vbo);
+
+        // Unbind VAO and VBO
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 }
