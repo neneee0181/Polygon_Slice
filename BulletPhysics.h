@@ -149,7 +149,7 @@ void updatePhysics(std::vector<Model>& models, Model& model_basket) {
             if (resultCallback.hitDetected) {
                 // 모델을 비활성화하거나 상태를 업데이트
                 model.line_status = false;
-
+                model.basket_in = true;
                 // 모델의 현재 회전 상태를 유지
                 glm::mat4 rotationMatrix = glm::mat4(1.0f);
                 rotationMatrix[0] = glm::vec4(model.modelMatrix[0]); // x축 회전

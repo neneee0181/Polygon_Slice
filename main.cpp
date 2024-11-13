@@ -25,6 +25,7 @@ void startTimer(int value);
 void rotateTimer(int value);
 void moveTimer(int value);
 void moveBasket(int value);
+void fallModelTimer(int value);
 
 void AddModelBuffer(const Model& model);
 void InitLineAddBuffer(const Model& model);
@@ -108,7 +109,7 @@ void keyDown(unsigned char key, int x, int y) {
         glutTimerFunc(0, rotateTimer, 0);
         glutTimerFunc(0, moveTimer, 0);
         glutTimerFunc(0, moveBasket, 0);
-
+        glutTimerFunc(0, fallModelTimer, 0);
         break;
     case '+':
         if (moveSpeed < 0.02f)
@@ -409,6 +410,43 @@ void moveTimer(int value) {
 
     glutPostRedisplay();
     glutTimerFunc(16, moveTimer, ++value);
+}
+
+void fallModelTimer(int value) {
+    float fallSpeed = 1.0f;       // y축 아래로 떨어지는 속도
+    float horizontalSpeed = 0.5f; // x축 좌우 이동 속도
+
+    for (int i = 0; i < models.size(); ++i) {
+        if (models[i].basket_in) {
+            continue;
+        }
+        if (models[i].slide_status) { // slide_status가 활성화된 모델만 처리
+            glm::mat4 translationMatrix = glm::mat4(1.0f);
+
+            // 좌측 또는 우측으로 이동
+            if (models[i].lr == 0) { // 좌측 (x- 방향)
+                translationMatrix = glm::translate(translationMatrix, glm::vec3(-horizontalSpeed, -fallSpeed, 0.0f));
+            }
+            else { // 우측 (x+ 방향)
+                translationMatrix = glm::translate(translationMatrix, glm::vec3(horizontalSpeed, -fallSpeed, 0.0f));
+            }
+
+            // 모델의 현재 modelMatrix에 이동 변환을 적용
+            models[i].modelMatrix = translationMatrix * models[i].modelMatrix;
+
+            // y 값이 특정 높이 이하로 떨어지면 모델을 비활성화하거나 상태 변경
+            if (models[i].modelMatrix[3].y <= -150.0f) {
+                models[i].slide_status = false;
+                models[i].model_status = false;
+                removeRigidBodyFromModel(models[i]); // 물리 세계에서 제거
+            }
+        }
+    }
+
+    updatePhysics(models, model_basket);
+
+    glutPostRedisplay();
+    glutTimerFunc(16, fallModelTimer, value); // 16ms 후에 다시 호출 (약 60 FPS)
 }
 
 bool basket_status = false;

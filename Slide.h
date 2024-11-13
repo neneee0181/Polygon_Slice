@@ -44,6 +44,10 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     // line_status ¼³Á¤
     topPart.slide_status = true;
     bottomPart.slide_status = true;
+
+    topPart.lr = 0;
+    bottomPart.lr = 1;
+
     topPart.lines.clear();
     bottomPart.lines.clear();
 
