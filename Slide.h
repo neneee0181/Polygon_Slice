@@ -47,12 +47,14 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     // line_status 설정
     topPart.slide_status = true;
     bottomPart.slide_status = true;
+    topPart.line_status = false;
+    bottomPart.line_status = false;
 
     topPart.lr = 0;
     bottomPart.lr = 1;
 
-    topPart.lines.clear();
-    bottomPart.lines.clear();
+    /*topPart.lines.clear();
+    bottomPart.lines.clear();*/
 
     // 원래 모델을 장면에서 제거
     removeModelFromWorld(models, originalModel);
