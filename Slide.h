@@ -9,6 +9,9 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete), 
     void(*InitBuffer)(), void(*InitLineBuffer)(const std::vector<Model>& models), glm::vec3 dragSqu[4]) {
 
+    if (originalModel.slide_status)
+        return;
+
     // 분할된 모델을 위한 복사본 생성
     Model topPart = originalModel, bottomPart = originalModel;
     topPart.vertices.clear();
