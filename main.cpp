@@ -473,7 +473,7 @@ void moveBasket(int value) {
         basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(speed, 0.0, 0.0));
 
         for (auto& model : models) {
-            if (model.model_status && !model.line_status) {
+            if (model.model_status && !model.line_status && model.basket_in) {
                 model.modelMatrix = basket_t_matrix * model.modelMatrix;
             }
         }
@@ -486,7 +486,7 @@ void moveBasket(int value) {
         basket_t_matrix = glm::translate(basket_t_matrix, glm::vec3(-speed, 0.0, 0.0));
 
         for (auto& model : models) {
-            if (model.model_status && !model.line_status) {
+            if (model.model_status && !model.line_status && model.basket_in) {
                 model.modelMatrix = basket_t_matrix * model.modelMatrix;
             }
         }
