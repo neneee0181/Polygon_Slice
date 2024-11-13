@@ -135,6 +135,18 @@ void keyDown(unsigned char key, int x, int y) {
         ++model_speed;
         cout << "폴리곤 생성 시간 ms = " + to_string(model_speed) << endl;
         break;
+    case '<':
+        cameraPos.x -= 5.0f;
+        break;
+    case '>':
+        cameraPos.x += 5.0f;
+        break;
+    case ':':
+        cameraPos.z += 5.0f;
+        break;
+    case '"':
+        cameraPos.z -= 5.0f;
+        break;
     default:
         break;
     }
