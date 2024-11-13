@@ -365,6 +365,8 @@ glm::vec3 catmullRomInterpolation(const glm::vec3& p0, const glm::vec3& p1, cons
 void moveTimer(int value) {
     for (int i = 0; i < models.size(); ++i) {
 
+        if (models[i].slide_status)
+            continue;
         if (!models[i].line_status && models[i].model_status)
             continue;
 

@@ -64,6 +64,7 @@ struct Model {
 
     bool model_status = true;
     bool line_status = true;
+    bool slide_status = false;
     bool basket_in = false;
 
     // Bullet Physics를 위한 멤버 추가

@@ -2,19 +2,12 @@
 #include <vector>
 #include "Model.h"
 #include <gl/glm/glm/glm.hpp>
+#include "LineMaker.h"
 
 void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
     void (*addModelToPhysicsWorld)(Model& model), void (*AddModelBuffer)(const Model& model),
     void (*removeModelFromWorld)(std::vector<Model>& models, Model& modelToDelete), 
     void(*InitBuffer)(), void(*InitLineBuffer)(const std::vector<Model>& models), glm::vec3 dragSqu[4]) {
-
-
-    // 모델의 중앙을 계산
-    glm::vec3 centroid(0.0f);
-    for (const auto& vertex : originalModel.vertices) {
-        centroid += vertex.toVec3();
-    }
-    centroid /= static_cast<float>(originalModel.vertices.size());
 
     // 분할된 모델을 위한 복사본 생성
     Model topPart = originalModel, bottomPart = originalModel;
@@ -47,6 +40,12 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
         read_obj_file("obj/teapot2.obj", topPart, "teapot");
         read_obj_file("obj/teapot3.obj", bottomPart, "teapot");
     }
+
+    // line_status 설정
+    topPart.slide_status = true;
+    bottomPart.slide_status = true;
+    topPart.lines.clear();
+    bottomPart.lines.clear();
 
     // 원래 모델을 장면에서 제거
     removeModelFromWorld(models, originalModel);
