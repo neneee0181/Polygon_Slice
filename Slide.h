@@ -51,7 +51,6 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     // 원래 모델을 장면에서 제거
     removeModelFromWorld(models, originalModel);
     InitBuffer();
-    InitLineBuffer(models);
 
     // 분할된 두 모델을 추가
 
@@ -62,6 +61,8 @@ void handleModelSlice1(Model& originalModel, const glm::vec3& planeNormal, float
     addModelToPhysicsWorld(bottomPart);
     models.push_back(bottomPart);
     AddModelBuffer(bottomPart);
+
+    InitLineBuffer(models);
 }
 
 void handleModelSlice2(Model& originalModel, const glm::vec3& planeNormal, float planeOffset, std::vector<Model>& models,
