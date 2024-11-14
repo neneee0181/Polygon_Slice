@@ -10,6 +10,9 @@
 
 ![설정화면](/img/img_4.png "설정화면")
 
+- obj폴더는 main.cpp와 같은 위치에 있어야함
+- freeglut, glew, glm 정적 라이브러리 위치
+
 ### 단축키 (Press 상태이어야 함)
 * 's' key - down : 게임 시작
 * '1' key - down | up : 도형 LINE | 도형 FILL
