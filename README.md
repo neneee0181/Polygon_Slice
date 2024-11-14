@@ -6,7 +6,7 @@
  - Bullet Physics 사용
    1. Visual Studio에서 프로젝트 > 구성 > C/C++ > 추가 포함 디렉터리 > include 폴더 추가
    2. Visual Studio에서 프로젝트 > 구성 > 링커 > 추가 라이브러리 디렉터리 > lib 폴더 추가
-   3. Visual Studio에서 프로젝트 > 구성 > 링커 > 입력 > 추가 종속성 > 
+   3. Visual Studio에서 프로젝트 > 구성 > 링커 > 입력 > 추가 종속성 > BulletCollision.lib;BulletDynamics.lib;LinearMath.lib 추가
 
 ### 단축키 (Press 상태이어야 함)
 * 's' key - down : 게임 시작
